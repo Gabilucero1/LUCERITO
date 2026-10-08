@@ -1,0 +1,22 @@
+// Componentes visuales reutilizables
+const pcard=(p,extra='',fn='editProd')=>`<button class="card t" onclick="${fn}(${p.id})"><div class="row">${pimgH(p)}<div class="grow"><div class="big">${esc(p.name)}</div><div class="mut">${esc(p.cat)}${p.sup?' · '+esc(p.sup):''}</div>${extra}</div><div style="text-align:right"><div class="big">${money(offer(p))}${esc(p.unit||'')}</div>${p.disc?`<div class="mut"><s>${money(p.price)}</s> −${p.disc}%</div>`:''}<div class="mut">Stock ${p.stock}</div>${stockTag(p)}</div></div></button>`;
+const offer=p=>Math.round(p.price*(1-(p.disc||0)/100));
+const EMO=[[/papa|patata/,'🥔'],[/lechuga|espinaca|acelga|verdura/,'🥬'],[/tomate/,'🍅'],[/cebolla/,'🧅'],[/zanahoria/,'🥕'],[/manzana/,'🍎'],[/banana|banano/,'🍌'],[/naranja|mandarina/,'🍊'],[/limon|limón/,'🍋'],[/frutilla|fresa/,'🍓'],[/yogur|yogurt|leche/,'🥛'],[/queso|muzzarella|mozzarella/,'🧀'],[/huevo/,'🥚'],[/\bpan\b|tostada|factura/,'🍞'],[/galleta|terrabusi|oreo|bizcocho|alfajor/,'🍪'],[/gaseosa|coca|sprite|fanta|pepsi|jugo/,'🥤'],[/agua/,'💧'],[/cerveza|birra/,'🍺'],[/vino/,'🍷'],[/fideo|pasta|tallar|spaghetti/,'🍝'],[/arroz/,'🍚'],[/carne|asado|bife|milanesa/,'🥩'],[/pollo/,'🍗'],[/salchicha|chorizo/,'🌭'],[/chocolate|golosina|caramelo/,'🍫'],[/helado/,'🍦'],[/papas fritas|snack|chizito/,'🍟'],[/aceite/,'🫒'],[/azucar|azúcar|\bsal\b/,'🧂'],[/cafe|café/,'☕'],[/yerba|mate|\bte\b|té\b/,'🍵'],[/jabon|jabón|shampoo|detergente|lavandina|limpieza/,'🧼'],[/papel higi|servilleta/,'🧻'],[/bolsa/,'🛍️'],[/churro/,'🥐']];
+const emojiFor=n=>{n=String(n||'').toLowerCase();for(const [r,e] of EMO)if(r.test(n))return e;return '🏷️'};
+const prodImg=p=>p.img?`<img src="${p.img}" alt="">`:esc((p.emoji&&p.emoji!=='🏷️')?p.emoji:emojiFor(p.name));
+const pimgH=p=>`<div class="pimg">${prodImg(p)}</div>`;
+const prodOf=a=>db.prod.find(p=>p.id===a.pid)||{emoji:a.emoji,name:a.name};
+function priceCard(a){const p=prodOf(a);return `<div class="card t" style="border-left-color:var(--warn)"><div onclick="editAum(${a.id})" style="cursor:pointer"><div class="row">${pimgH(p)}<div class="grow"><div class="big">${esc(a.name)}</div><div class="mut" style="margin-top:4px">ANTES</div><div class="old">${money(a.old)}${esc(a.unit||'')}</div><div class="mut" style="margin-top:4px">NUEVO</div><div class="new">${money(a.nw)}${esc(a.unit||'')} ${a.nw>a.old?'⬆️':'⬇️'}</div><div class="mut">${esc(a.u)} · ${a.d===iso()?'':fd(a.d)+' '}${a.h}</div></div></div></div><button class="btn s" style="min-height:44px;font-size:15px;margin:8px 0 0" onclick="delAum(${a.id})">🗑️ ELIMINAR</button></div>`}
+const bd=p=>{const d=days(p.venc),v=vstate(p);return `<span class="tag" style="background:${v.c};color:#fff">${d<0?'Vencido':d===0?'Hoy':d+' días'}</span>`};
+function sheet(html){let s=$('#sh');if(!s){s=document.createElement('div');s.id='sh';s.className='sheet';s.onclick=e=>{if(e.target===s)closeSheet()};document.body.appendChild(s)}s.innerHTML='<div>'+html+'</div>'}
+function closeSheet(){const s=$('#sh');if(s)s.remove();render()}
+const chkbox=(on,fn,t)=>`<label style="display:flex;gap:10px;align-items:center;min-height:44px"><input type="checkbox" style="width:26px;min-height:26px" ${on?'checked':''} onchange="${fn}">${t}</label>`;
+const avatar=u=>u.photo?`<img src="${u.photo}" alt="">`:esc((u.name||'?')[0].toUpperCase());
+const TOASTS=[];
+function toast(m){TOASTS.push(m);if(TOASTS.length>30)TOASTS.shift();let t=$('#toast');if(!t||!t.style){t=document.createElement('div');t.id='toast';t.className='toast';document.body.appendChild(t)}t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.display='none'},4000)}
+// Confirmación propia (los confirm()/toast() del navegador no funcionan dentro de otras páginas como Claude).
+let ASK=null;
+function ask(msg,fn,yes){ASK=fn;const o=document.createElement('div');o.id='askb';o.className='sheet';o.style.zIndex=15;o.innerHTML=`<div><h2>${esc(msg)}</h2><button class="btn d" onclick="askYes()">${yes||'Sí, eliminar'}</button><button class="btn s" onclick="askNo()">No</button></div>`;document.body.appendChild(o)}
+function askNo(){const o=$('#askb');if(o)o.remove()}
+function askYes(){const f=ASK;ASK=null;askNo();if(f)f()}
+const LOCALBN='<div class="card" style="border-left:6px solid var(--y)"><b>Modo local (sin servidor)</b><div class="mut">Los datos se guardan solo en este dispositivo y NO se comparten con otras personas. Para compartirlos hay que conectar Supabase (ver README).</div></div>';
