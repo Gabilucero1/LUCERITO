@@ -97,6 +97,30 @@ h=usersPage();ok(h.includes('cami@email.com')&&h.includes('Último acceso')&&h.i
 sesSheet();killSess(cs);sid=cs;ok(!sessAlive(),'cerrar sesión ajena');sid=null;
 delUser('cami');askYes();ok(!db.users.some(u=>u.id==='cami')&&db.trash.some(t=>t.coll==='users'),'eliminar usuario');
 restoreT(db.trash.find(t=>t.coll==='users').tid);ok(db.users.some(u=>u.id==='cami'),'restaurar usuario');
+// --- calculadora del día, vencimientos por lote y nombres del menú ---
+ok(NAV.some(n=>n[2]==='Pagos diarios')&&!NAV.some(n=>n[2]==='Pagos'||n[0]==='gastos'||n[2]==='Gastos'),'menú: Pagos diarios y sin Gastos');
+view='home';ok(!/Gastos/.test(home())&&home().includes('Pagos diarios hoy'),'Inicio sin Gastos');ok(!/Gastos/.test(jornada())&&jornada().includes('Pagos diarios'),'Jornada sin Gastos');
+view='pagos';ok(page().includes('Pagos diarios'),'título Pagos diarios');ok(COL.gastos&&Array.isArray(db.gastos),'los datos de Gastos se conservan');
+ok(parseAR('1.500,50')===1500.5&&parseAR('1.500')===1500&&parseAR('1500,5')===1500.5&&parseAR('1500')===1500&&isNaN(parseAR('abc'))&&isNaN(parseAR('-5')),'importes en formato argentino');
+calcDay=null;vals['#cin']='1.500,50';calcAdd();vals['#cin']='2.000';calcAdd();ok(calcTotal()===3500.5&&db.calc.length===2,'la calculadora suma');
+view='ped';ok(colPage('ped').includes('$3.500,50')&&colPage('ped').includes('LIMPIAR'),'el total se muestra en Pedidos');
+vals['#cin']='abc';calcAdd();ok(db.calc.length===2,'importe inválido no se guarda');
+vals['#ce']='3.000';calcSaveEdit(db.calc[0].id);ok(calcTotal()===5000,'corregir un importe');
+calcDel(db.calc[0].id);askYes();ok(calcTotal()===2000&&db.trash.some(t=>t.coll==='calc'),'eliminar un importe (va a la papelera)');
+calcDay='2020-01-01';vals['#cin']='500';calcAdd();ok(calcTotal()===500,'otro día tiene su propio total');calcDay=null;ok(calcTotal()===2000,'el total de hoy no se mezcla');
+calcClearAsk();askYes();ok(calcItems().length===0&&db.trash.filter(t=>t.coll==='calc').length>=2,'limpiar pide confirmación y manda a la papelera');
+restoreT(db.trash.find(t=>t.coll==='calc').tid);ok(calcTotal()>0,'restaurar un importe');
+Object.assign(vals,{'#lv_d':'2030-03-10','#lv_q':'4','#lv_n':'A'});saveLot(pap.id,0,false);
+Object.assign(vals,{'#lv_d':'2030-02-01','#lv_q':'','#lv_n':'B'});saveLot(pap.id,0,true);
+ok(pap.lots.length===2&&pap.venc==='2030-02-01','varios vencimientos del mismo producto (venc = el más próximo)');
+view='venc';ok(page().includes('Lote: 4 unidades')&&vencRows().filter(r=>r.p===pap).length===2,'el listado muestra cada lote');
+const l0=pap.lots[0].id;Object.assign(vals,{'#lv_d':'2030-01-20','#lv_q':'4','#lv_n':'A'});saveLot(pap.id,l0,false);ok(pap.venc==='2030-01-20','editar un vencimiento');
+delLot(pap.id,l0);askYes();ok(pap.lots.length===1&&pap.venc==='2030-02-01'&&db.log.some(l=>l.act==='Eliminó vencimiento'),'eliminar un vencimiento');
+const lg=db.prod.find(p=>p!==pap);lg.venc='2030-05-05';delete lg.lots;ok(lotList(lg).length===1&&lotList(lg)[0].id===-1,'producto viejo con una sola fecha se ve como lote');
+Object.assign(vals,{'#lv_d':'2030-06-06','#lv_q':'','#lv_n':''});saveLot(lg.id,-1,false);ok(lg.lots.length===1&&lg.venc==='2030-06-06','editar el vencimiento de un producto viejo');
+Object.assign(vals,{'#f_name':pap.name,'#f_barcode':pap.barcode||'','#f_cat':pap.cat||'','#f_sup':pap.sup||'','#f_price':String(pap.price),'#f_unit':'','#f_disc':'0','#f_stock':String(pap.stock),'#f_min':String(pap.min||0),'#f_venc':'2030-01-15','#f_emoji':pap.emoji||''});saveProd(pap.id);
+ok(pap.venc==='2030-01-15'&&pap.lots.some(l=>l.venc==='2030-01-15')&&pap.lots.length===1,'la ficha del producto edita la fecha más próxima');
+ok(soon().length>=0&&vstate(pap)&&typeof home()==='string','las alertas de vencimiento siguen funcionando');
 // --- todas las pantallas, perfil y configuración ---
 for(const n of NAV){view=n[0];ok(typeof page()==='string','pantalla '+n[0])}
 ['perfil','notif','venc','aum','perms','solic','ses','fecha','gen'].forEach(cfgOpen);

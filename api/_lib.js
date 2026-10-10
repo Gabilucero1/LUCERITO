@@ -7,7 +7,7 @@ function sb() {
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     throw new Error('Faltan SUPABASE_URL y SUPABASE_SERVICE_ROLE_KEY en las variables de entorno de Vercel.');
   }
-  return createClient(process.env.SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+  return createClient(String(process.env.SUPABASE_URL).trim().replace(/\/+$/, '').replace(/\/(rest|auth|realtime|storage)\/v1$/i, ''), process.env.SUPABASE_SERVICE_ROLE_KEY, { auth: { persistSession: false } });
 }
 
 function fcm() {

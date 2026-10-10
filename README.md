@@ -1,6 +1,6 @@
 # LUCERITO — gestión interna del negocio familiar
 
-Aplicación para usar desde el celular y la computadora: productos con código de barras, stock, vencimientos, aumentos del día, proveedores, pedidos, mercadería recibida, pagos, gastos, notas, historial, papelera y usuarios. Varias personas trabajan a la vez con sus propias cuentas y ven los mismos datos.
+Aplicación para usar desde el celular y la computadora: productos con código de barras, stock, vencimientos, aumentos del día, proveedores, pedidos, mercadería recibida, pagos diarios, notas, calculadora del día, historial, papelera y usuarios. Varias personas trabajan a la vez con sus propias cuentas y ven los mismos datos.
 
 ## 1. Qué es cada cosa (no son lo mismo)
 
@@ -165,3 +165,18 @@ npm run dev     # http://localhost:3000 (la cámara funciona en localhost)
 npm run build   # arma dist/
 npm test        # pruebas automáticas
 ```
+
+## Migraciones de la base de datos (Supabase)
+`db/schema.sql` se ejecuta UNA sola vez en un proyecto nuevo. Los cambios posteriores van en `db/migrations/`, son **solo aditivos** (no borran ni modifican datos) y se pueden ejecutar más de una vez sin problema.
+
+| Archivo | Para qué sirve | ¿Obligatoria? |
+|---|---|---|
+| `db/migrations/001_calc_entries.sql` | Crea la tabla `calc_entries` donde se guardan, de forma compartida, los importes de la **calculadora del día** (sección Pedidos). | Sí, para que la calculadora guarde. Mientras no se ejecute, la app funciona igual y la calculadora muestra un aviso. |
+
+Cómo ejecutarla: Supabase → **SQL Editor** → **New query** → pegar el contenido del archivo → **Run**.
+
+## Notas de esta versión
+- **Pagos diarios**: la sección antes llamada "Pagos" ahora se llama "Pagos diarios". No cambian sus datos.
+- **Gastos**: ya no aparece en el menú, Inicio, Jornada ni "Agregar rápido". La tabla `expenses` y todos sus registros siguen en Supabase y en la papelera; solo se ocultó la pantalla.
+- **Vencimientos por lote**: cada producto puede tener varias fechas. Se guardan dentro del producto (no requiere migración) y `venc` del producto sigue siendo la fecha más próxima, por eso las alertas no cambian.
+- **Cerrar sesión**: cierra solo el dispositivo donde se toca el botón (`signOut` con alcance `local`); no cierra las demás sesiones de esa cuenta ni las de otras usuarias.

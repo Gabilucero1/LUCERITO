@@ -4,7 +4,8 @@
   "private": true,
   "description": "App de gesti\u00f3n interna del negocio familiar Lucerito",
   "scripts": {
-    "build": "node scripts/build.js",
+    "check": "node scripts/check-structure.js",
+    "build": "node scripts/check-structure.js && node scripts/build.js",
     "dev": "node scripts/build.js --serve",
     "test": "node scripts/smoke-test.js && node scripts/smoke-remote.js && node scripts/smoke-session.js"
   },
@@ -13,6 +14,6 @@
     "firebase-admin": "^12.6.0"
   },
   "engines": {
-    "node": ">=18"
+    "node": "22.x"
   }
 }

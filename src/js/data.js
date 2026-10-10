@@ -1,10 +1,10 @@
 const $=s=>document.querySelector(s);
 const KEY=(typeof ENV!=='undefined'&&ENV.STORAGE_KEY)||'lucerito_v1';
-const seed=()=>({users:[],prod:[],sup:[],ped:[],merc:[],pagos:[],gastos:[],notas:[],alerts:[],trash:[],resets:[],log:[],n:10});
+const seed=()=>({users:[],prod:[],sup:[],ped:[],merc:[],pagos:[],gastos:[],calc:[],notas:[],alerts:[],trash:[],resets:[],log:[],n:10});
 let db,me=null,view='home',menuOpen=false;
 db=Store.load();
 if(!db)db=seed();
-db.cfg=Object.assign({offerDays:10,notif:false,notifAum:true},db.cfg||{});db.reqs=db.reqs||[];db.users=(db.users||[]).filter(u=>u.email&&u.hash);db.trash=db.trash||[];db.resets=db.resets||[];db.alerts=db.alerts||[];
+db.cfg=Object.assign({offerDays:10,notif:false,notifAum:true},db.cfg||{});db.reqs=db.reqs||[];db.calc=db.calc||[];db.users=(db.users||[]).filter(u=>u.email&&u.hash);db.trash=db.trash||[];db.resets=db.resets||[];db.alerts=db.alerts||[];
 
 const save=()=>Store.save(db);
 const iso=(d=new Date())=>{const z=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())};

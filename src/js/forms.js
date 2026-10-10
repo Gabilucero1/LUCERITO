@@ -16,7 +16,7 @@ function saveCol(k,id){const c=COL[k];const vals={};c.f.forEach(f=>vals[f[0]]=va
  if(id){const x=db[k].find(y=>y.id===id);const ch=c.f.filter(f=>String(x[f[0]]??'')!==String(vals[f[0]])).map(f=>f[1]+': '+(x[f[0]]??'—')+' → '+vals[f[0]]);
   if(!me.admin&&ch.some(z=>z.startsWith('Fecha')))useGrant('date');Object.assign(x,vals);log('Modificó '+c.t.toLowerCase(),c.line(x)[0],null,ch.join(' | '));const fc=ch.filter(z=>z.startsWith('Fecha'));if(fc.length)log('Cambió fecha manualmente',c.line(x)[0],null,fc.join(' | '));
   if(k==='ped'&&vals.st==='Recibido'&&!db.merc.some(m=>m.ped===id)){const m={id:nid(),ped:id,sup:x.sup,date:iso(),amt:x.amt,note:'Desde pedido',u:me.name,h:hm()};db.merc.push(m);log('Registró mercadería recibida',x.sup+' '+money(x.amt))}}
- else{const x={id:nid(),...vals,u:me.name,h:hm()};if(!x.date&&k!=='sup')x.date=iso();db[k].push(x);log('Agregó '+c.t.toLowerCase().replace(/s$/,''),c.line(x)[0]);if(k==='ped')Remote.notify('pedidos','📋 NUEVO PEDIDO',x.sup+' llega el '+fd(x.date),'ped');if(k==='merc'&&x.ped){const o=db.ped.find(y=>y.id===x.ped);if(o&&o.st!=='Recibido'){o.st='Recibido';log('Marcó pedido como recibido',o.sup+' — '+money(o.amt))}}}
+ else{const x={id:nid(),...vals,u:me.name,h:hm()};if(!x.date&&k!=='sup')x.date=iso();db[k].push(x);log('Agregó '+(c.one||c.t.toLowerCase().replace(/s$/,'')),c.line(x)[0]);if(k==='ped')Remote.notify('pedidos','📋 NUEVO PEDIDO',x.sup+' llega el '+fd(x.date),'ped');if(k==='merc'&&x.ped){const o=db.ped.find(y=>y.id===x.ped);if(o&&o.st!=='Recibido'){o.st='Recibido';log('Marcó pedido como recibido',o.sup+' — '+money(o.amt))}}}
  save();closeSheet()}
 function delCol(k,id){ask('¿Eliminar este registro? Va a la papelera y queda en el historial.',()=>{softDelete(k,id);closeSheet()})}
 
@@ -40,8 +40,8 @@ function saveProd(id){const v={};PF.forEach(f=>v[f[0]]=val(f));if(!v.name)return
   if(p.venc!==v.venc)log(p.venc?'Modificó vencimiento':'Agregó vencimiento',p.name,p.venc?fd(p.venc):null,fd(v.venc));
   if(p.disc!==v.disc)log('Modificó oferta',p.name,p.disc+'%',v.disc+'%');
   if(p.name!==v.name||p.cat!==v.cat||p.sup!==v.sup)log('Modificó producto',p.name,p.name+' / '+p.cat+' / '+p.sup,v.name+' / '+v.cat+' / '+v.sup);
-  Object.assign(p,v)}
- else{const np={id:nid(),hist:[],smov:[],...v,stock:0};db.prod.push(np);log('Agregó producto',v.name,null,money(v.price)+' · stock '+v.stock);if(v.stock>0)stockMove(np,v.stock,'Stock inicial')}
+  const nv=v.venc;delete v.venc;const ov=p.venc||'';Object.assign(p,v);applyVencEdit(p,ov,nv)}
+ else{const np={id:nid(),hist:[],smov:[],...v,stock:0};if(v.venc){np.lots=[{id:nid(),venc:v.venc,qty:'',note:'',u:me.name,d:iso()}];syncVenc(np)}db.prod.push(np);log('Agregó producto',v.name,null,money(v.price)+' · stock '+v.stock);if(v.stock>0)stockMove(np,v.stock,'Stock inicial')}
  save();closeSheet()}
 function delProd(id){ask('¿Eliminar el producto? Va a la papelera; su historial se conserva.',()=>{softDelete('prod',id);closeSheet()})}
 

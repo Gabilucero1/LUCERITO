@@ -2,7 +2,7 @@
 // sincronización entre dos dispositivos. NO reemplaza probar contra un Supabase real ni las reglas RLS del SQL.
 let seq=0;const uid=()=>'u'+(++seq);const cp=o=>JSON.parse(JSON.stringify(o));
 class Server{
- constructor(){this.users=[];this.t={};this.clients=[];this.settings={approve:false};this.resets=[]}
+ constructor(){this.users=[];this.t={};this.clients=[];this.settings={approve:false};this.resets=[];this.missing=new Set();this.scopes=[]}
  table(n){return this.t[n]||(this.t[n]=[])}
  emit(table,eventType,nw,old){for(const c of this.clients)for(const l of c.listeners)if(l.table===table)setTimeout(()=>l.cb({eventType,new:cp(nw||{}),old:cp(old||{})}),0)}
 }
@@ -23,7 +23,7 @@ function client(server,storage){
    me.session={user:{id,email},access_token:'tok-'+id};keep();return {data:{user:{id,identities:[1]},session:me.session},error:null}},
   async signInWithPassword({email,password}){const u=server.users.find(x=>x.email===email.toLowerCase()&&x.password===password);
    if(!u)return {data:{},error:{message:'Invalid login credentials'}};me.session={user:{id:u.id,email:u.email},access_token:'tok-'+u.id};keep();return {data:{user:me.session.user,session:me.session},error:null}},
-  async signOut(){me.session=null;keep();c.authCbs.forEach(cb=>cb('SIGNED_OUT',null));return {error:null}},
+  async signOut(o){server.scopes.push(o&&o.scope);me.session=null;keep();c.authCbs.forEach(cb=>cb('SIGNED_OUT',null));return {error:null}},
   async getSession(){return {data:{session:me.session}}},
   onAuthStateChange(cb){c.authCbs.push(cb);return {data:{subscription:{unsubscribe(){}}}}},
   async resetPasswordForEmail(email){server.resets.push(email.toLowerCase());return {error:null}},
@@ -34,7 +34,7 @@ function client(server,storage){
    eq(k,v){st.filters.push(r=>r[k]===v);return api},is(k,v){st.filters.push(r=>(r[k]??null)===v);return api},
    order(k,o){st.order=[k,!(o&&o.ascending===false)];return api},range(a,b){st.rng=[a,b];return api},limit(n){st.lim=n;return api},
    then(res,rej){return run().then(res,rej)}};
-  const run=async()=>{if(!me.session)return {data:null,error:{message:'JWT required',code:'401'}};const rows=server.table(tname),match=r=>st.filters.every(f=>f(r));
+  const run=async()=>{if(!me.session)return {data:null,error:{message:'JWT required',code:'401'}};if(server.missing.has(tname))return {data:null,error:{code:'PGRST205',message:"Could not find the table 'public."+tname+"' in the schema cache"}};const rows=server.table(tname),match=r=>st.filters.every(f=>f(r));
    if(st.op==='insert'){const list=Array.isArray(st.vals)?st.vals:[st.vals],out=[];
     for(const v of list){
      if(v.id!==undefined&&rows.some(r=>r.id===v.id))return {data:null,error:{code:'23505',message:'duplicate key'}};

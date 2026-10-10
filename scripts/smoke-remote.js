@@ -69,6 +69,28 @@ const ok=(c,m)=>{if(!c)throw new Error(m)};
  A.run('purge('+tid2+')');await settle(A);
  ok(!server.table('trash_items').some(r=>r.id===tid2),'la administradora sí elimina definitivamente');
  ok(A.run('db.log.some(l=>l.act==="Eliminó definitivamente producto")'),'queda en la auditoría');
+ // --- calculadora compartida ---
+ const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
+ A.run('calcDay=null');A.vals['#cin']='1.500,50';A.run('calcAdd()');A.vals['#cin']='2000';A.run('calcAdd()');await settle(A);
+ ok(B.run('calcTotal()')===3500.5&&server.table('calc_entries').length===2,'Cami ve el total de la calculadora de Gabi y está en la base central');
+ const c1=A.run('calcItems()[0].id');B.run('calcDay=null');B.vals['#ce']='3000';B.run('calcSaveEdit('+c1+')');await settle(B);ok(A.run('calcTotal()')===5000,'Gabi ve la corrección de Cami');
+ B.run('calcDel('+c1+')');B.run('askYes()');await settle(B);ok(A.run('calcTotal()')===2000&&server.table('calc_entries').length===1,'eliminar un importe se comparte');
+ A.run('calcClearAsk()');A.run('askYes()');await settle(A);ok(B.run('calcTotal()')===0&&server.table('calc_entries').length===0&&A.run('trashActive().filter(t=>t.coll==="calc").length')===2,'limpiar vacía el día para todas y queda en la papelera');
+ // --- vencimientos por lote compartidos ---
+ prod(A,{name:'Tomate',price:100,stock:1});await settle(A);const lid=A.run('db.prod.find(p=>p.name==="Tomate").id');
+ Object.assign(A.vals,{'#lv_d':'2030-03-10','#lv_q':'4','#lv_n':'A'});A.run('saveLot('+lid+',0,false)');Object.assign(A.vals,{'#lv_d':'2030-02-01','#lv_q':'','#lv_n':'B'});A.run('saveLot('+lid+',0,false)');await settle(A);
+ ok(B.run('db.prod.find(p=>p.name==="Tomate").lots.length')===2&&B.run('db.prod.find(p=>p.name==="Tomate").venc')==='2030-02-01'&&server.table('products').find(r=>r.data.name==='Tomate').data.lots.length===2,'Cami ve los dos vencimientos del mismo producto');
+ // --- foto de perfil: se guarda y NO cierra la sesión ---
+ A.run('newAv="data:image/jpeg;base64,AAAA"');Object.assign(A.vals,{'#pn':'Gabi','#pl':'R'});A.run('saveMe()');await settle(A);await sleep(40);
+ ok(server.table('profiles').find(p=>p.email==='gabi@email.com').photo==='data:image/jpeg;base64,AAAA','la foto queda guardada en el perfil');
+ ok(A.run('!!me&&me.on===1&&me.photo')==='data:image/jpeg;base64,AAAA'||A.run('!!me&&me.on===1'),'cambiar la foto no cierra la sesión');
+ A.run('Remote.onProfile({eventType:"UPDATE",new:{id:me.uid,username:"gabi",email:"gabi@email.com",first_name:"Gabi",photo:"x"}})');await sleep(30);
+ ok(A.run('!!me&&me.on===1&&me.admin===1'),'un aviso de perfil incompleto no deja a la usuaria sin sesión ni sin rol');
+ // --- tabla nueva todavía no creada (migración pendiente): la app entra igual y avisa ---
+ const s2=new Server();s2.missing.add('calc_entries');const C=makeApp(s2);while(!C.run('Remote.ready'))await sleep(5);C.run('splash=false');
+ await reg(C,{n:'Test',u:'test',m:'test@email.com',p:'clave123'});ok(C.run('!!me&&Remote.missing.calc_entries===true'),'sin la tabla de la calculadora la app entra igual');
+ C.vals['#cin']='100';C.run('calcAdd()');await settle(C);ok(!C.toasts.some(t=>t.includes('No se pudo guardar'))&&C.run('calcCard()').includes('Falta activar'),'avisa que falta la migración y no rompe el guardado');
+ ok(C.run('db.prod.length')===0&&C.run('Remote.ch')!==null,'el resto sigue funcionando');
  // --- sesiones de cuentas reales ---
  const sess=await A.run('Remote.sessions()');ok(sess.some(s=>s.name.startsWith('Cami')&&s.on),'Gabi ve la sesión de Cami');
  const cs=sess.find(s=>s.name.startsWith('Cami')).id;A.run('killSess("'+cs+'")');await sleep(60);
@@ -81,6 +103,7 @@ const ok=(c,m)=>{if(!c)throw new Error(m)};
  H.run('authView="recover"');Object.assign(H.vals,{'#fp1':'nueva1234','#fp2':'nueva1234'});await H.run('recoverSave()');
  ok(server.users.find(u=>u.email==='cami@email.com').password==='nueva1234','contraseña actualizada en el sistema de autenticación');
  H.vals['#lu']='cami@email.com';H.vals['#lp']='nueva1234';await H.run('doLogin()');await sleep(30);ok(H.run('me&&me.email')==='cami@email.com','entra con la contraseña nueva');
+ ok(server.scopes.length>0&&server.scopes.every(x=>x==='local'),'cerrar sesión es solo de este dispositivo (scope local)');
  // --- push: sin Firebase configurado falla con un mensaje claro ---
  let err='';try{await H.run('Push.enable()')}catch(e){err=e.message}ok(/Firebase/.test(err),'push sin configurar da un mensaje claro');
  // --- avisos diarios del servidor (lógica pura) ---
