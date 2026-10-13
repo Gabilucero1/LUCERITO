@@ -90,7 +90,7 @@ const ok=(c,m)=>{if(!c)throw new Error(m)};
  // --- tabla nueva todavía no creada (migración pendiente): la app entra igual y avisa ---
  const s2=new Server();s2.missing.add('calc_entries');const C=makeApp(s2);while(!C.run('Remote.ready'))await sleep(5);C.run('splash=false');
  await reg(C,{n:'Test',u:'test',m:'test@email.com',p:'clave123'});ok(C.run('!!me&&Remote.missing.calc_entries===true'),'sin la tabla de la calculadora la app entra igual');
- C.vals['#cin']='100';C.run('calcAdd()');await settle(C);ok(!C.toasts.some(t=>t.includes('No se pudo guardar'))&&C.run('calcCard()').includes('Falta activar'),'avisa que falta la migración y no rompe el guardado');
+ C.vals['#cin']='100';C.run('calcAdd()');await settle(C);ok(!C.toasts.some(t=>t.includes('No se pudo guardar'))&&C.run('calcCard()').includes('001_calc_entries.sql'),'avisa que falta la migración y no rompe el guardado');
  ok(C.run('db.prod.length')===0&&C.run('Remote.ch')!==null,'el resto sigue funcionando');
  // --- sesiones de cuentas reales ---
  const sess=await A.run('Remote.sessions()');ok(sess.some(s=>s.name.startsWith('Cami')&&s.on),'Gabi ve la sesión de Cami');
