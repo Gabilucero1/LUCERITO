@@ -102,14 +102,14 @@ ok(NAV.some(n=>n[2]==='Pagos diarios')&&!NAV.some(n=>n[2]==='Pagos'||n[0]==='gas
 view='home';ok(!/Gastos/.test(home())&&home().includes('Pagos diarios hoy'),'Inicio sin Gastos');ok(!/Gastos/.test(jornada())&&jornada().includes('Pagos diarios'),'Jornada sin Gastos');
 view='pagos';ok(page().includes('Pagos diarios'),'título Pagos diarios');ok(COL.gastos&&Array.isArray(db.gastos),'los datos de Gastos se conservan');
 ok(parseAR('1.500,50')===1500.5&&parseAR('1.500')===1500&&parseAR('1500,5')===1500.5&&parseAR('1500')===1500&&isNaN(parseAR('abc'))&&isNaN(parseAR('-5')),'importes en formato argentino');
-calcDay=null;vals['#cin']='1.500,50';calcAdd();vals['#cin']='2.000';calcAdd();ok(calcTotal()===3500.5&&db.calc.length===2,'la calculadora suma');
-view='ped';ok(colPage('ped').includes('$3.500,50')&&colPage('ped').includes('LIMPIAR'),'el total se muestra en Pedidos');
+calcDay=null;vals['#cin']='1.500,50';calcAdd();vals['#cin']='2.000';calcAdd();ok(calcExtras()===3500.5&&db.calc.length===2,'la calculadora suma');
+view='ped';ok(colPage('ped').includes('CALCULADORA DEL DÍA')&&colPage('ped').includes('LIMPIAR'),'la calculadora se muestra en Pedidos');
 vals['#cin']='abc';calcAdd();ok(db.calc.length===2,'importe inválido no se guarda');
-vals['#ce']='3.000';calcSaveEdit(db.calc[0].id);ok(calcTotal()===5000,'corregir un importe');
-calcDel(db.calc[0].id);askYes();ok(calcTotal()===2000&&db.trash.some(t=>t.coll==='calc'),'eliminar un importe (va a la papelera)');
-calcDay='2020-01-01';vals['#cin']='500';calcAdd();ok(calcTotal()===500,'otro día tiene su propio total');calcDay=null;ok(calcTotal()===2000,'el total de hoy no se mezcla');
+vals['#ce']='3.000';calcSaveEdit(db.calc[0].id);ok(calcExtras()===5000,'corregir un importe');
+calcDel(db.calc[0].id);askYes();ok(calcExtras()===2000&&db.trash.some(t=>t.coll==='calc'),'eliminar un importe (va a la papelera)');
+calcDay='2020-01-01';vals['#cin']='500';calcAdd();ok(calcExtras()===500,'otro día tiene su propio total');calcDay=null;ok(calcExtras()===2000,'el total de hoy no se mezcla');
 calcClearAsk();askYes();ok(calcItems().length===0&&db.trash.filter(t=>t.coll==='calc').length>=2,'limpiar pide confirmación y manda a la papelera');
-restoreT(db.trash.find(t=>t.coll==='calc').tid);ok(calcTotal()>0,'restaurar un importe');
+restoreT(db.trash.find(t=>t.coll==='calc').tid);ok(calcExtras()>0,'restaurar un importe');
 Object.assign(vals,{'#lv_d':'2030-03-10','#lv_q':'4','#lv_n':'A'});saveLot(pap.id,0,false);
 Object.assign(vals,{'#lv_d':'2030-02-01','#lv_q':'','#lv_n':'B'});saveLot(pap.id,0,true);
 ok(pap.lots.length===2&&pap.venc==='2030-02-01','varios vencimientos del mismo producto (venc = el más próximo)');
@@ -121,6 +121,38 @@ Object.assign(vals,{'#lv_d':'2030-06-06','#lv_q':'','#lv_n':''});saveLot(lg.id,-
 Object.assign(vals,{'#f_name':pap.name,'#f_barcode':pap.barcode||'','#f_cat':pap.cat||'','#f_sup':pap.sup||'','#f_price':String(pap.price),'#f_unit':'','#f_disc':'0','#f_stock':String(pap.stock),'#f_min':String(pap.min||0),'#f_venc':'2030-01-15','#f_emoji':pap.emoji||''});saveProd(pap.id);
 ok(pap.venc==='2030-01-15'&&pap.lots.some(l=>l.venc==='2030-01-15')&&pap.lots.length===1,'la ficha del producto edita la fecha más próxima');
 ok(soon().length>=0&&vstate(pap)&&typeof home()==='string','las alertas de vencimiento siguen funcionando');
+// --- pedidos: estados automáticos, calculadora que suma sola, mercadería que carga productos y vencimientos ---
+{const T=iso(),M=tomorrow(),Yd=(()=>{const d=new Date();d.setDate(d.getDate()-1);return iso(d)})(),D5=(()=>{const d=new Date();d.setDate(d.getDate()+5);return iso(d)})();
+const mkPed=o=>{Object.assign(vals,{'#f_sup':'__new__','#f_supnew':o.sup,'#f_date':o.date||'','#f_amt':String(o.amt),'#f_st':o.st||'Agregado','#f_note':''});saveCol('ped',0);return db.ped[db.ped.length-1]};
+calcDay=null;const before=calcPedTotal();
+const p1=mkPed({sup:'Prov Uno',date:M,amt:1000}),p2=mkPed({sup:'Prov Dos',date:T,amt:2500.5}),p3=mkPed({sup:'Prov Tres',date:'',amt:300});
+ok(p1.cd===T&&p3.date==='','el pedido guarda el día en que se anotó y puede quedar sin fecha');
+ok(pedEff(p1)==='Agregado'&&pedBadge(p1).includes('Agregado hoy'),'pedido con llegada futura = Agregado hoy');
+ok(pedEff(p2)==='En camino'&&pedBadge(p2).includes('En camino')&&pedEff(p3)==='Agregado','al llegar la fecha de llegada pasa solo a En camino');
+ok(pedEff({st:'Agregado',date:Yd})==='En camino'&&pedEff({st:'Recibido',date:Yd})==='Recibido','un pedido atrasado sigue En camino hasta que lo marcan Recibido');
+ok(calcPedTotal()===Math.round((before+3800.5)*100)/100,'la calculadora suma sola los pedidos anotados hoy');
+view='ped';ptab='pend';ok(colPage('ped').includes('Prov Dos')&&colPage('ped').includes('Agregado hoy')&&colPage('ped').includes(moneyC(calcTotal())),'Pedidos muestra los estados y el total automático');
+calcDay=Yd;ok(calcPedTotal()===db.ped.filter(x=>(x.cd||x.date)===Yd).reduce((s,x)=>s+x.amt,0),'otro día no se mezcla');calcDay=null;
+// recibir un pedido: pasa a Mercadería recibida y se carga qué llegó
+const sb=pap.stock;recibirPed(p2.id);const m2=db.merc.find(m=>m.ped===p2.id);
+ok(p2.st==='Recibido'&&m2&&!(m2.items&&m2.items.length),'recibir un pedido lo pasa a Mercadería recibida');
+ok(colPage('merc').includes('Falta cargar qué llegó'),'avisa que falta cargar qué llegó');
+const lst=()=>colPage('ped').split('Pendientes (')[1];ptab='pend';ok(!lst().includes('Prov Dos'),'el pedido recibido sale de Pendientes');ptab='rec';ok(lst().includes('Prov Dos'),'y aparece en Recibidos');ptab='pend';
+mercForm(m2.id);MI=[{pid:pap.id,qty:3,venc:'2031-01-01'}];
+Object.assign(vals,{'#f_sup':'Prov Dos','#f_date':T,'#f_amt':'2500.5','#f_note':'','#f_ped':String(p2.id)});saveMerc(m2.id);
+ok(pap.stock===sb+3&&m2.items.length===1&&m2.items[0].venc==='2031-01-01','lo que llegó suma stock en Productos');
+ok(pap.lots.some(l=>l.venc==='2031-01-01'&&l.qty===3),'y el vencimiento queda cargado en el producto');
+ok(!colPage('merc').split('Prov Dos')[1].slice(0,200).includes('Falta cargar'),'ya no figura como pendiente de detalle');
+// producto que no existe: se crea al recibir (nombre + código), con cantidad y un vencimiento próximo que dispara la alerta
+recibirPed(p1.id);const m1=db.merc.find(m=>m.ped===p1.id);mercForm(m1.id);
+Object.assign(vals,{'#mq':'7791234500011','#mnn':'Galletitas Nuevas'});mSearch();mNew();
+const gn=db.prod.find(p=>p.name==='Galletitas Nuevas');ok(gn&&gn.barcode==='7791234500011'&&MI.length===1&&MI[0].pid===gn.id,'se crea el producto nuevo con su código y se agrega a lo recibido');
+MI[0].qty=5;MI[0].venc=D5;Object.assign(vals,{'#f_sup':'Prov Uno','#f_date':T,'#f_amt':'1000','#f_note':'','#f_ped':String(p1.id)});saveMerc(m1.id);
+ok(gn.stock===5&&gn.venc===D5&&soon().some(p=>p.id===gn.id),'el vencimiento cargado al recibir dispara la alerta de productos por vencer');
+// cambiar el estado a Recibido desde la ficha del pedido también lo pasa a Mercadería
+Object.assign(vals,{'#f_sup':'Prov Tres','#f_date':'','#f_amt':'300','#f_st':'Recibido','#f_note':''});saveCol('ped',p3.id);
+ok(db.merc.some(m=>m.ped===p3.id)&&PENDM===0,'marcar Recibido desde la ficha también pasa a Mercadería');
+}
 // --- todas las pantallas, perfil y configuración ---
 for(const n of NAV){view=n[0];ok(typeof page()==='string','pantalla '+n[0])}
 ['perfil','notif','venc','aum','perms','solic','ses','fecha','gen'].forEach(cfgOpen);
@@ -130,6 +162,6 @@ Object.assign(vals,{'#rq':'users','#rn':'x'});sendReq();me=db.users.find(u=>u.ad
 // --- login y registro se dibujan ---
 logout();splash=true;login();splash=false;authView='reg';login();authView='forgot';fpStep=1;login();authView='login';login();
 // --- persistencia: recargar = leer lo guardado ---
-const re=Store.load();ok(re.prod.length===4&&re.users.length===2&&re.log.length>20,'los datos sobreviven a recargar');
+const re=Store.load();ok(re.prod.length===5&&re.users.length===2&&re.log.length>20,'los datos sobreviven a recargar');
 `;
 new Function('return (async()=>{'+js+'\n'+test+'})()')().then(()=>{console.log('Prueba OK');process.exit(0)}).catch(e=>{console.error('FALLÓ:',e.message);process.exit(1)});

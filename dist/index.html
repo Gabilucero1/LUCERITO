@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="es"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>LUCERITO</title>
+<link rel="manifest" href="/manifest.webmanifest"><meta name="theme-color" content="#F2E8DC">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#F2E8DC;--card:#fff;--ink:#1a1a1a;--p1:#F7D6DD;--p2:#E88CA5;--p3:#C9506F;--mut:#7a6a63;--warn:#D0213F;--ok:#2E8B57;--y:#E0A800;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+:root{color-scheme:light}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.5 'Poppins',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;min-height:100vh}
+button,input,select,textarea{font:inherit;color:inherit}
+header{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:2px solid var(--p2)}
+header h1{font-weight:600;letter-spacing:.14em;font-size:22px;line-height:1.1;color:#7d1f3d}
+.ib{width:48px;height:48px;border-radius:14px;border:0;background:var(--p2);color:#fff;font-size:22px}
+main{padding:14px;max-width:640px;margin:auto}
+h2{margin:6px 0 12px;font-size:21px;font-weight:600;line-height:1.25}.sub{color:var(--mut);margin:0 0 14px}
+.card{background:var(--card);border-radius:18px;padding:14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(120,60,80,.12);display:block;width:100%;text-align:left;border:0}
+.card.t{border-left:6px solid var(--p2);cursor:pointer}.card.red{border-left-color:var(--warn)}
+.row{display:flex;gap:10px;align-items:center}.grow{flex:1}.big{font-size:18px;font-weight:600}.mut{color:var(--mut);font-size:14px}
+.btn{min-height:52px;width:100%;border:0;border-radius:16px;background:var(--p3);color:#fff;font-size:18px;font-weight:600;margin:6px 0 14px}
+.btn.s{background:var(--p1);color:var(--ink)}.btn.d{background:var(--warn)}
+.tag{display:inline-block;border-radius:99px;padding:3px 12px;font-size:14px;font-weight:600;background:var(--p1)}
+.new{color:var(--warn);font-size:24px;font-weight:600}.old{font-size:18px}
+.pimg{width:56px;height:56px;border-radius:14px;background:var(--p1);display:grid;place-items:center;font-size:28px;overflow:hidden}.pimg img{width:100%;height:100%;object-fit:cover}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.grid .card{margin:0;min-height:96px}
+.sheet{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9;display:flex;align-items:flex-end;justify-content:center}
+.sheet>div{background:var(--bg);width:100%;max-width:640px;max-height:88vh;overflow:auto;border-radius:22px 22px 0 0;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0px))}
+label{display:block;margin:10px 0 4px;font-weight:600;font-size:15px}
+input,select,textarea{width:100%;min-height:48px;padding:10px 12px;border:2px solid var(--p1);border-radius:12px;background:var(--card)}
+.menu button{display:block;width:100%;min-height:54px;text-align:left;border:0;background:var(--card);border-radius:14px;margin-bottom:8px;padding:0 16px;font-size:18px}
+.menu button.on{background:var(--p2);color:#fff}
+.login{max-width:380px;margin:12vh auto;padding:20px;text-align:center}.login h1{font-weight:700;letter-spacing:.14em;font-size:28px;margin:0 0 6px}
+.login h2{font-size:20px;margin:0 0 8px}
+.empty{text-align:center;color:var(--mut);padding:24px}
+.hist{border-left:4px solid var(--p2)}
+body{background:linear-gradient(#fbeee9,#F2E8DC 40%,#f6d3da) fixed}
+header h1{font-weight:600;letter-spacing:.14em;font-size:22px;line-height:1.1;color:#7d1f3d}
+header h1 small{display:block;font:500 9px/1 'Poppins',sans-serif;letter-spacing:.22em;color:var(--mut);margin-top:4px}
+.bnav{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:space-around;align-items:center;background:var(--card);padding:6px 4px calc(6px + env(safe-area-inset-bottom,0px));border-radius:22px 22px 0 0;box-shadow:0 -3px 12px rgba(120,60,80,.15)}
+.bnav button{flex:1;border:0;background:none;font-size:12px;min-height:56px;color:var(--mut)}.bnav button span{display:block;font-size:22px}.bnav button.on{color:var(--p3)}
+.bnav .plus{flex:0 0 62px;height:62px;min-height:62px;border-radius:50%;background:var(--warn);color:#fff;font-size:34px;margin-top:-26px;box-shadow:0 4px 10px rgba(200,40,70,.4)}
+.tabs{display:flex;gap:6px;background:var(--p1);padding:4px;border-radius:14px;margin-bottom:12px}.tabs button{flex:1;min-height:44px;border:0;border-radius:11px;background:none;font-weight:600}.tabs button.on{background:var(--p2);color:#fff}
+.splash{max-width:380px;margin:0 auto;padding:60px 24px;text-align:center;min-height:100vh}.splash .l{font-weight:600;font-size:40px;letter-spacing:.14em;color:#7d1f3d;line-height:1.1}.splash .alm{letter-spacing:.3em;font-size:13px;margin:6px 0 24px}.splash .s{font-size:18px;font-weight:500;margin:20px 0}
+
+.login{background:#fff;border-radius:22px;box-shadow:0 2px 12px rgba(120,60,80,.15)}
+.login,.login *{color:#000!important}
+.login input{border-color:#000}
+.ar,.hist{color:#000}
+main{padding-bottom:110px}
+.pimg.lg{width:72px;height:72px;font-size:38px}
+.pimg.xl{width:110px;height:110px;font-size:52px;border-radius:50%;margin:0 auto 10px}
+.ib.av{padding:0;overflow:hidden;border-radius:50%;font-size:20px;font-weight:600;background:var(--p1);color:var(--ink)}.ib.av img{width:100%;height:100%;object-fit:cover}
+.big-alert{background:linear-gradient(135deg,#F7D6DD,#E88CA5);border:3px solid var(--warn);padding:18px}
+.ba-h{font-size:22px;font-weight:600;color:var(--warn)}.ba-t{font-size:24px;font-weight:600;margin:2px 0 12px}
+.ba-row{display:flex;gap:12px;align-items:center;margin-top:12px;background:rgba(255,255,255,.75);border-radius:14px;padding:10px}
+.ok-alert{text-align:center;padding:22px;border:3px solid var(--ok)}
+.aum{border:3px solid var(--p2)}
+
+b,strong{font-weight:600}
+label{font-weight:500}
+.new{font-weight:700}
+.menu button{font-weight:500}
+.bnav button{font-weight:500}
+
+.btn.big{min-height:64px;font-size:19px}
+.bigin{min-height:56px;font-size:17px;border-radius:16px;margin-bottom:6px}
+
+.lmsg{background:var(--p1);border-radius:12px;padding:10px 12px;font-weight:600;margin:10px 0}
+.lnk{background:none;border:0;text-decoration:underline;font-weight:500;min-height:44px;width:100%;cursor:pointer}
+.toast{position:fixed;left:12px;right:12px;bottom:calc(92px + env(safe-area-inset-bottom,0px));z-index:30;background:#1a1a1a;color:#fff;border-radius:14px;padding:12px 16px;font-weight:500;display:none;box-shadow:0 4px 14px rgba(0,0,0,.3)}
+.splash svg{width:230px;height:auto;margin:10px auto 26px;display:block}
+
+</style></head><body>
+<div id="app"></div>
+<script>
+const ENV={"STORAGE_KEY":"lucerito_v1","ADMIN_EMAIL":"","DEV_SHOW_CODE":false,"SUPABASE_URL":"","SUPABASE_ANON_KEY":"","FIREBASE_API_KEY":"","FIREBASE_AUTH_DOMAIN":"","FIREBASE_PROJECT_ID":"","FIREBASE_STORAGE_BUCKET":"","FIREBASE_MESSAGING_SENDER_ID":"","FIREBASE_APP_ID":"","FIREBASE_VAPID_KEY":""};
+const REMOTE_ON=!!(ENV.SUPABASE_URL&&ENV.SUPABASE_ANON_KEY);
+// CAPA DE SERVICIOS: es el único lugar que hay que reemplazar para conectar un servidor real.
+// MODO ACTUAL ('local') = DEMOSTRACIÓN: cuentas y datos quedan en este navegador (localStorage).
+// NO es seguridad real: cualquiera con acceso técnico al dispositivo puede leer o alterar estos datos.
+const Store={
+ ok:true,
+ probe(){try{localStorage.setItem(KEY+'_p','1');localStorage.removeItem(KEY+'_p');this.ok=true}catch(e){this.ok=false}return this.ok},
+ load(){if(REMOTE_ON)return null;try{return JSON.parse(localStorage.getItem(KEY))}catch(e){return null}},
+ save(d){if(REMOTE_ON){Remote.schedule();return true}try{localStorage.setItem(KEY,JSON.stringify(d));this.ok=true}catch(e){this.ok=false}return this.ok},
+ // Sesión recordada (solo MODO LOCAL). En modo conectado la recuerda Supabase Auth.
+ session(){if(REMOTE_ON)return null;try{return JSON.parse(localStorage.getItem(KEY+'_session'))}catch(e){return null}},
+ setSession(s){if(REMOTE_ON)return;try{localStorage.setItem(KEY+'_session',JSON.stringify(s))}catch(e){}},
+ clearSession(){try{localStorage.removeItem(KEY+'_session')}catch(e){}}
+ // TODO servidor: reemplazar por lecturas y escrituras a una base de datos (ej. Postgres / Supabase).
+};
+const hex=b=>[...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('');
+const Mailer={
+ // TODO servidor: enviar el correo de verdad (Resend, SendGrid, Supabase Auth, etc.). Desde el navegador NO se puede.
+ // Devuelve true solo si el correo realmente salió. Hoy no hay servicio conectado, por eso devuelve false.
+ async send(to,subject,text){return false}
+};
+const Auth={
+ // La contraseña nunca se guarda: solo un hash con sal (PBKDF2). En modo demo el hash se calcula en el navegador.
+ async hash(pass,salt){
+  if(!(window.crypto&&crypto.subtle))throw new Error('Este navegador no puede proteger contraseñas. Abrí la app con https.');
+  const k=await crypto.subtle.importKey('raw',new TextEncoder().encode(pass),'PBKDF2',false,['deriveBits']);
+  return hex(await crypto.subtle.deriveBits({name:'PBKDF2',salt:new TextEncoder().encode(salt),iterations:150000,hash:'SHA-256'},k,256))},
+ async check(u,pass){return !!(u&&u.hash&&u.salt)&&await this.hash(pass,u.salt)===u.hash},
+ async setPassword(u,pass){u.salt=hex(crypto.getRandomValues(new Uint8Array(16)));u.hash=await this.hash(pass,u.salt)},
+ // ----- Recuperación de contraseña (código temporal de 6 dígitos, vence a los 10 min, 5 intentos, un solo uso) -----
+ async requestReset(email){const u=db.users.find(x=>x.email===email);
+  if(!u)return {mailed:false,code:null,unknown:!!ENV.DEV_SHOW_CODE};
+  const code=String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,'0'),salt=hex(crypto.getRandomValues(new Uint8Array(8)));
+  db.resets=(db.resets||[]).filter(r=>r.email!==email);db.resets.push({email,salt,hash:await this.hash(code,salt),exp:Date.now()+10*60000,tries:0});save();
+  const mailed=await Mailer.send(email,'Tu código de recuperación de LUCERITO','Tu código de recuperación de LUCERITO es: '+code);
+  // MODO PRUEBA (solo si se compila con DEV_SHOW_CODE=true): muestra el código en pantalla porque no hay correo conectado.
+  return {mailed,code:(!mailed&&ENV.DEV_SHOW_CODE)?code:null}},
+ async verifyReset(email,code){const r=(db.resets||[]).find(x=>x.email===email);
+  if(!r)return {ok:false,msg:'Pedí un código nuevo.'};
+  if(Date.now()>r.exp){db.resets=db.resets.filter(x=>x!==r);save();return {ok:false,msg:'El código venció. Pedí uno nuevo.'}}
+  if(r.tries>=5){db.resets=db.resets.filter(x=>x!==r);save();return {ok:false,msg:'Demasiados intentos. Pedí un código nuevo.'}}
+  r.tries++;save();
+  if(await this.hash(String(code).trim(),r.salt)!==r.hash)return {ok:false,msg:'El código no es correcto.'};
+  return {ok:true}},
+ async resetPassword(email,code,pass){const v=await this.verifyReset(email,code);if(!v.ok)return v;
+  const u=db.users.find(x=>x.email===email);if(!u)return {ok:false,msg:'Cuenta no encontrada.'};
+  await this.setPassword(u,pass);db.resets=db.resets.filter(x=>x.email!==email);save();return {ok:true}}
+ // TODO servidor: reemplazar por un servicio de autenticación real (login, registro, sesiones y recuperación en servidor).
+};
+
+// Conexión REAL a Supabase: autenticación, base de datos central compartida y tiempo real.
+// Solo se activa si hay SUPABASE_URL y SUPABASE_ANON_KEY (ver .env.example). Sin eso la app funciona en MODO LOCAL (demostración).
+// La clave "anon" es pública por diseño: la seguridad real la dan las reglas RLS de db/schema.sql, no el navegador.
+// En modo conectado la FUENTE DE VERDAD es la base de datos; el navegador solo guarda la sesión de Supabase.
+// La URL base de Supabase debe ser SOLO https://<proyecto>.supabase.co. Si se pegó con /rest/v1 (la "Data API URL"), la autenticación iría a /rest/v1/auth/v1/... y daría 404.
+const cleanSbUrl=u=>String(u||'').trim().replace(/\/+$/,'').replace(/\/(rest|auth|realtime|storage)\/v1$/i,'').replace(/\/+$/,'');
+// Tabla que puede faltar si todavía no se ejecutó la migración: la app sigue funcionando y avisa.
+const isMissingTable=e=>!!e&&(e.code==='PGRST205'||e.code==='42P01'||/schema cache|does not exist/i.test(e.message||''));
+const SDK_URL='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.117.3/dist/umd/supabase.js';
+const SYNC=[{k:'prod',t:'products'},{k:'sup',t:'suppliers'},{k:'ped',t:'orders'},{k:'merc',t:'receipts'},{k:'pagos',t:'payments'},{k:'gastos',t:'expenses'},{k:'notas',t:'notes'},{k:'calc',t:'calc_entries',opt:true},{k:'alerts',t:'price_changes'},{k:'trash',t:'trash_items'},{k:'reqs',t:'permission_requests'},{k:'log',t:'audit_log',append:true}];
+const TBL=Object.fromEntries(SYNC.map(s=>[s.t,s.k]));
+let BOOTERR='',PHOTO='',FORCING=false;
+const stable=o=>JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((a,x)=>(a[x]=v[x],a),{}):v);
+const mapProfile=r=>({id:r.username,uid:r.id,email:r.email,name:r.first_name,last:r.last_name,photo:r.photo||'',admin:r.role==='admin'?1:0,on:r.active?1:0,prefs:r.notif_prefs||{},lastSeen:r.last_seen||null,lastAccess:r.last_access?{d:iso(new Date(r.last_access)),h:new Date(r.last_access).toTimeString().slice(0,5)}:null});
+const Remote={
+ on:REMOTE_ON,ready:!REMOTE_ON,sb:null,uid:null,sid:null,revoked:false,recovering:false,SNAP:{},VER:{},missing:{},cfgSnap:'',pushing:false,dirty:false,lastSess:[],
+ // ---------- arranque ----------
+ async init(){
+  try{
+   if(!window.supabase)await loadScript(SDK_URL);
+   this.sb=window.supabase.createClient(cleanSbUrl(ENV.SUPABASE_URL),String(ENV.SUPABASE_ANON_KEY).trim(),{auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}});
+   this.recovering=/type=recovery/.test(location.hash||'');
+   this.sb.auth.onAuthStateChange((ev)=>{if(ev==='PASSWORD_RECOVERY'){this.recovering=true;authView='recover';if(!me)render()}else if(ev==='SIGNED_OUT'&&me&&!this.leaving&&!FORCING)this.sessionEnded()});
+   if(this.recovering)authView='recover';
+   else{const {data,error}=await this.sb.auth.getSession();if(error)throw error;if(data&&data.session){const uid=data.session.user.id;for(let i=0;;i++){try{await this.enterFrom(uid);break}catch(e){if(i>=2)throw e;await new Promise(r=>setTimeout(r,1500*(i+1)))}}}}
+  }catch(e){BOOTERR=e.message||String(e)}
+  this.ready=true},
+  // ---------- autenticación (¿quién es esta persona?) ----------
+ msg(e){const m=String((e&&e.message)||e);if(/invalid login/i.test(m))return 'Correo o contraseña incorrectos.';if(/not confirmed/i.test(m))return 'Tenés que confirmar tu correo antes de ingresar. Revisá tu bandeja de entrada.';if(/already registered/i.test(m))return 'Ya existe una cuenta con ese correo.';if(/rate limit|too many/i.test(m))return 'Demasiados intentos. Esperá unos minutos y probá de nuevo.';if(/password/i.test(m)&&/(6|short|weak)/i.test(m))return 'La contraseña es demasiado corta o débil.';return m},
+ async signUp({email,password,username,first,last}){
+  const ok=await this.sb.rpc('username_available',{u:username});if(ok.error)return {error:this.msg(ok.error)};if(ok.data===false)return {error:'Ese nombre de usuario ya está en uso.'};
+  const {data,error}=await this.sb.auth.signUp({email,password,options:{data:{username,first_name:first,last_name:last},emailRedirectTo:location.origin+location.pathname}});
+  if(error)return {error:this.msg(error)};
+  if(data.user&&data.user.identities&&data.user.identities.length===0)return {error:'Ya existe una cuenta con ese correo.'};
+  return {session:data.session,user:data.user}},
+ async signIn(email,password){const {data,error}=await this.sb.auth.signInWithPassword({email,password});if(error)return {error:this.msg(error)};return {session:data.session,user:data.user}},
+ async resetEmail(email){const {error}=await this.sb.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});return error?{error:this.msg(error)}:{ok:true}},
+ async updatePassword(pw){const {error}=await this.sb.auth.updateUser({password:pw});return error?{error:this.msg(error)}:{ok:true}},
+ async signOut(){this.leaving=true;try{if(this.sid)await this.sb.from('app_sessions').update({ended_at:new Date().toISOString()}).eq('id',this.sid)}catch(e){}
+  clearInterval(this.hb);try{await this.unregisterPush()}catch(e){}
+  try{await this.sb.auth.signOut({scope:'local'})}catch(e){}
+  if(this.ch){try{this.sb.removeChannel(this.ch)}catch(e){}this.ch=null}this.sid=null;this.uid=null;this.leaving=false},
+ // Entrar con una sesión de Supabase ya existente: recupera usuario + perfil. Nunca crea cuentas.
+ async enterFrom(uid){if(this.entering)return !!me;this.entering=true;try{return await this._enter(uid)}finally{this.entering=false}},
+ sessionEnded(){clearInterval(this.hb);me=null;sid=null;view='home';const s=$('#sh');if(s)s.remove();authMsg='Tu sesión terminó. Ingresá de nuevo con tu correo y contraseña.';this.sid=null;this.uid=null;this.clear();render()},
+ async _enter(uid){
+  const {data,error}=await this.sb.from('profiles').select('*').eq('id',uid);const row=data&&data[0];
+  if(error)throw new Error('No se pudo leer tu perfil ('+error.message+'). ¿Se ejecutó db/schema.sql en Supabase?');
+  if(!row){await this.sb.auth.signOut({scope:'local'});authMsg='Tu cuenta no tiene perfil. Avisale a la administradora.';return false}
+  if(!row.active){if(PHOTO){await this.sb.from('profiles').update({photo:PHOTO}).eq('id',uid);PHOTO=''}await this.sb.auth.signOut({scope:'local'});authMsg='Tu cuenta está pendiente de aprobación o desactivada. Hablá con la administradora.';return false}
+  this.uid=uid;this.revoked=false;await this.loadAll();this.subscribe();
+  me=db.users.find(u=>u.uid===uid)||mapProfile(row);
+  view=(typeof GO!=='undefined'&&GO&&NAV.some(n=>n[0]===GO))?GO:'home';authView='login';
+  await this.startSession();
+  const now=new Date().toISOString();await this.sb.from('profiles').update({last_access:now,last_seen:now}).eq('id',uid);me.lastAccess={d:iso(),h:hm()};
+  if(PHOTO){me.photo=PHOTO;PHOTO='';await this.saveProfile()}
+  log('Ingresó','Inicio de sesión');
+  if(Push.configured()&&typeof Notification!=='undefined'&&Notification.permission==='granted')Push.enable().catch(()=>{});
+  return true},
+ async afterAuth(){const {data}=await this.sb.auth.getSession();const uid=data&&data.session&&data.session.user.id;if(!uid)return false;return this.enterFrom(uid)},
+ // ---------- carga de datos centrales ----------
+ async fetchAll(t){const out=[];for(let from=0;;from+=1000){const {data,error}=await this.sb.from(t).select('id,data,version').order('id',{ascending:true}).range(from,from+999);if(error)throw error;out.push(...data);if(data.length<1000)break}return out},
+ async fetchLog(){const {data,error}=await this.sb.from('audit_log').select('id,data,version').order('id',{ascending:false}).limit(500);if(error)throw error;return data},
+ async loadAll(){
+  for(const {k,t,opt} of SYNC){let rows;try{rows=t==='audit_log'?await this.fetchLog():await this.fetchAll(t)}catch(e){if(opt&&isMissingTable(e)){this.missing[t]=true;db[k]=db[k]||[];this.SNAP[t]={};this.VER[t]={};continue}throw e}delete this.missing[t];this.SNAP[t]={};this.VER[t]={};
+   db[k]=rows.map(r=>{const rec={...r.data,id:r.id};this.SNAP[t][r.id]=stable(rec);this.VER[t][r.id]=r.version;return rec})}
+  db.log.sort((a,b)=>b.id-a.id);
+  const s=await this.sb.from('app_settings').select('data').eq('id',1);db.cfg=Object.assign({offerDays:10,approve:true},(s.data&&s.data[0]&&s.data[0].data)||{});this.cfgSnap=stable(db.cfg);
+  const p=await this.sb.from('profiles').select('*');if(p.error)throw p.error;db.users=p.data.map(mapProfile)},
+ clear(){for(const {k} of SYNC)db[k]=[];db.users=[];this.SNAP={};this.VER={}},
+ // ---------- guardar cambios (diferencias) ----------
+ schedule(){if(!this.on||!me||!this.sb)return;clearTimeout(this._t);this._t=setTimeout(()=>this.push(),120)},
+ async flush(){clearTimeout(this._t);while(this.pushing)await new Promise(r=>setTimeout(r,5));if(this.on&&this.sb&&this.uid)await this.push()},
+ async push(){if(this.pushing){this.dirty=true;return}this.pushing=true;
+  try{do{this.dirty=false;for(const s of SYNC)await this.pushUpserts(s);for(const s of SYNC)await this.pushDeletes(s);await this.pushCfg()}while(this.dirty)}
+  catch(e){toast('No se pudo guardar en el servidor: '+(e.message||e))}finally{this.pushing=false}},
+ async pushUpserts({k,t,append}){if(this.missing[t])return;const snap=this.SNAP[t]||(this.SNAP[t]={}),ver=this.VER[t]||(this.VER[t]={});
+  for(const rec of db[k].slice()){const id=rec.id,js=stable(rec);
+   if(!(id in snap)){const {error}=await this.sb.from(t).insert({id,data:rec,version:1});
+    if(error){if(error.code==='23505'){db[k]=db[k].filter(r=>r!==rec);toast(t==='products'?'Ese código de barras ya está registrado en otro producto.':t==='suppliers'?'Ya existe un proveedor con ese nombre.':'Ese registro ya existe.');render();continue}throw error}
+    snap[id]=js;ver[id]=1}
+   else if(!append&&snap[id]!==js){const v=ver[id];const {data,error}=await this.sb.from(t).update({data:rec,version:v+1}).eq('id',id).eq('version',v).select('id');
+    if(error)throw error;if(!data||!data.length){await this.resolveConflict({k,t},id);continue}snap[id]=js;ver[id]=v+1}}},
+ async pushDeletes({k,t,append}){if(append||this.missing[t])return;const snap=this.SNAP[t]||{},ver=this.VER[t]||{},cur=new Set(db[k].map(r=>String(r.id)));
+  for(const id of Object.keys(snap)){if(!cur.has(id)){const {error}=await this.sb.from(t).delete().eq('id',Number(id));if(error)throw error;delete snap[id];delete ver[id]}}},
+ async pushCfg(){if(!me||!me.admin)return;if(stable(db.cfg)!==this.cfgSnap){const {error}=await this.sb.from('app_settings').update({data:db.cfg,updated_at:new Date().toISOString()}).eq('id',1);if(error)throw error;this.cfgSnap=stable(db.cfg)}},
+ async resolveConflict({k,t},id){const {data}=await this.sb.from(t).select('id,data,version').eq('id',id);const row=data&&data[0],i=db[k].findIndex(r=>r.id===id);
+  if(!row){if(i>=0)db[k].splice(i,1);delete this.SNAP[t][id];delete this.VER[t][id];toast('Otra persona eliminó ese registro.')}
+  else{const rec={...row.data,id:row.id};if(i>=0)db[k][i]=rec;this.SNAP[t][id]=stable(rec);this.VER[t][id]=row.version;toast('Otra persona modificó ese registro al mismo tiempo. Te mostré su versión: revisá y repetí tu cambio si hace falta.')}
+  render()},
+ // ---------- tiempo real ----------
+ subscribe(){if(this.ch){try{this.sb.removeChannel(this.ch)}catch(e){}}
+  let ch=this.sb.channel('lucerito');
+  for(const {t} of SYNC)if(!this.missing[t])ch=ch.on('postgres_changes',{event:'*',schema:'public',table:t},p=>this.onRow(t,p));
+  ch=ch.on('postgres_changes',{event:'*',schema:'public',table:'profiles'},p=>this.onProfile(p)).on('postgres_changes',{event:'*',schema:'public',table:'app_settings'},p=>this.onCfg(p)).on('postgres_changes',{event:'*',schema:'public',table:'app_sessions'},p=>this.onSess(p));
+  this.ch=ch.subscribe()},
+ isDirty(t,id){const rec=db[TBL[t]].find(r=>r.id===id);return !!rec&&stable(rec)!==this.SNAP[t][id]},
+ onRow(t,p){if(!me)return;const k=TBL[t],arr=db[k];
+  if(p.eventType==='DELETE'){const id=p.old.id,i=arr.findIndex(r=>r.id===id);if(i>=0&&!this.isDirty(t,id))arr.splice(i,1);delete this.SNAP[t][id];delete this.VER[t][id]}
+  else{const row=p.new,rec={...row.data,id:row.id},i=arr.findIndex(r=>r.id===row.id);
+   if(i>=0){if(this.isDirty(t,row.id))return;arr[i]=rec}else arr.push(rec);
+   this.SNAP[t][row.id]=stable(rec);this.VER[t][row.id]=row.version}
+  if(t==='audit_log')arr.sort((a,b)=>b.id-a.id);
+  this.refresh()},
+ onProfile(p){if(!me)return;
+  if(p.eventType==='DELETE'){db.users=db.users.filter(u=>u.uid!==p.old.id);return this.refresh()}
+  const n=mapProfile(p.new),i=db.users.findIndex(u=>u.uid===n.uid),cur=i>=0?db.users[i]:null;
+  if(cur)for(const [col,key] of [['active','on'],['role','admin'],['photo','photo'],['notif_prefs','prefs'],['first_name','name'],['last_name','last'],['last_seen','lastSeen'],['last_access','lastAccess']])if(!(col in p.new)&&key in cur)n[key]=cur[key];
+  if(n.uid===me.uid){Object.assign(me,n);if(i>=0)db.users[i]=me;else db.users.push(me);if(!me.on)forceOut()}
+  else if(i>=0)db.users[i]=n;else db.users.push(n);
+  this.refresh()},
+ onCfg(p){if(!me)return;db.cfg=Object.assign({offerDays:10,approve:true},p.new.data||{});this.cfgSnap=stable(db.cfg);this.refresh()},
+ onSess(p){if(p.new&&p.new.id===this.sid&&p.new.revoked_at){this.revoked=true;forceOut()}},
+ refresh(){clearTimeout(this._r);this._r=setTimeout(()=>{const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.closest&&a.closest('#app'))return;if(me)render()},250)},
+ // ---------- sesiones (ligadas a la cuenta, no al dispositivo) ----------
+ async startSession(){const {data,error}=await this.sb.from('app_sessions').insert({user_id:this.uid,device:deviceKind()+' · '+((String(navigator.userAgent).match(/(Edg|Chrome|Firefox|Safari)\//)||[0,'Navegador'])[1])}).select('id');
+  if(!error&&data&&data[0]){this.sid=data[0].id;sid=this.sid}
+  clearInterval(this.hb);this.hb=setInterval(()=>this.heartbeat(),60000)},
+ async heartbeat(){if(!this.sid||!this.uid)return;try{const {data}=await this.sb.from('app_sessions').select('revoked_at').eq('id',this.sid);
+  if(data&&data[0]&&data[0].revoked_at){this.revoked=true;forceOut();return}
+  const now=new Date().toISOString();await this.sb.from('app_sessions').update({last_seen:now}).eq('id',this.sid);await this.sb.from('profiles').update({last_seen:now}).eq('id',this.uid)}catch(e){}},
+ async sessions(){const {data}=await this.sb.from('app_sessions').select('*').order('started_at',{ascending:false}).limit(30);
+  this.lastSess=(data||[]).map(r=>{const u=db.users.find(x=>x.uid===r.user_id);return {id:r.id,uid:r.user_id,name:u?uName(u):'?',dev:r.device||'—',start:Date.parse(r.started_at),last:Date.parse(r.last_seen),on:!r.revoked_at&&!r.ended_at&&Date.now()-Date.parse(r.last_seen)<150000}});return this.lastSess},
+ async endSession(id){await this.sb.from('app_sessions').update({revoked_at:new Date().toISOString(),revoked_by:this.uid}).eq('id',id)},
+ async revokeUser(uid){await this.sb.from('app_sessions').update({revoked_at:new Date().toISOString(),revoked_by:this.uid}).eq('user_id',uid).is('revoked_at',null)},
+ // ---------- perfil ----------
+ async saveProfile(){try{const {error}=await this.sb.from('profiles').update({first_name:me.name,last_name:me.last||'',photo:me.photo||'',notif_prefs:me.prefs||{}}).eq('id',me.uid);if(error)throw error;return true}catch(e){toast('No se pudo guardar tu perfil: '+(e.message||e));return false}},
+ async setActive(u){await this.sb.from('profiles').update({active:!!u.on}).eq('id',u.uid)},
+ // ---------- notificaciones push (el envío lo hace el servidor: api/notify.js) ----------
+ async registerPush(token){await this.sb.rpc('register_push_token',{p_token:token,p_device:deviceKind()});try{localStorage.setItem(KEY+'_push',token)}catch(e){}},
+ async unregisterPush(){let t=null;try{t=localStorage.getItem(KEY+'_push');localStorage.removeItem(KEY+'_push')}catch(e){}if(t&&this.sb)await this.sb.from('push_devices').delete().eq('token',t)},
+ async notify(type,title,body,go){if(!this.on||!this.sb)return;
+  try{const {data}=await this.sb.auth.getSession();const tk=data&&data.session&&data.session.access_token;if(!tk)return;
+   await fetch('/api/notify',{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tk},body:JSON.stringify({type,title,body,url:go?'/?go='+go:'/'})})}catch(e){}}
+};
+
+// Notificaciones push REALES (Firebase Cloud Messaging). Necesitan Supabase + Firebase configurados (ver README).
+// Muestra una notificación del sistema aunque la app esté cerrada. NO es una alerta interna disfrazada.
+const FB_VER='10.12.2';
+let PUSH_BOUND=false;
+const Push={
+ configured:()=>!!(ENV.FIREBASE_API_KEY&&ENV.FIREBASE_PROJECT_ID&&ENV.FIREBASE_MESSAGING_SENDER_ID&&ENV.FIREBASE_APP_ID&&ENV.FIREBASE_VAPID_KEY),
+ async enable(){
+  if(!Remote.on)throw new Error('Las notificaciones push necesitan que la app esté conectada al servidor (Supabase).');
+  if(!this.configured())throw new Error('Falta configurar Firebase (variables FIREBASE_*). Ver README.');
+  if(!('serviceWorker' in navigator&&typeof Notification!=='undefined'))throw new Error('Este navegador no permite notificaciones push. En iPhone hay que agregar la app a la pantalla de inicio.');
+  const perm=await Notification.requestPermission();if(perm!=='granted')throw new Error('No diste permiso para recibir notificaciones.');
+  if(!window.firebase||!window.firebase.messaging){await loadScript('https://www.gstatic.com/firebasejs/'+FB_VER+'/firebase-app-compat.js');await loadScript('https://www.gstatic.com/firebasejs/'+FB_VER+'/firebase-messaging-compat.js')}
+  const fb=window.firebase;if(!fb.apps.length)fb.initializeApp({apiKey:ENV.FIREBASE_API_KEY,authDomain:ENV.FIREBASE_AUTH_DOMAIN||(ENV.FIREBASE_PROJECT_ID+'.firebaseapp.com'),projectId:ENV.FIREBASE_PROJECT_ID,storageBucket:ENV.FIREBASE_STORAGE_BUCKET,messagingSenderId:ENV.FIREBASE_MESSAGING_SENDER_ID,appId:ENV.FIREBASE_APP_ID});
+  const reg=await navigator.serviceWorker.register('/firebase-messaging-sw.js');await navigator.serviceWorker.ready;
+  const messaging=fb.messaging();
+  const token=await messaging.getToken({vapidKey:ENV.FIREBASE_VAPID_KEY,serviceWorkerRegistration:reg});
+  if(!token)throw new Error('No se pudo obtener el identificador de este dispositivo.');
+  await Remote.registerPush(token);
+  if(!PUSH_BOUND){PUSH_BOUND=true;messaging.onMessage(p=>{const d=p.data||{};reg.showNotification(d.title||'LUCERITO',{body:d.body||'',icon:'/icon-192.png',tag:d.type||'lucerito',data:{url:d.url||'/'}})})}
+  return token},
+ async disable(){try{await Remote.unregisterPush()}catch(e){}try{if(window.firebase&&window.firebase.apps.length)await window.firebase.messaging().deleteToken()}catch(e){}}
+};
+
+const $=s=>document.querySelector(s);
+const KEY=(typeof ENV!=='undefined'&&ENV.STORAGE_KEY)||'lucerito_v1';
+const seed=()=>({users:[],prod:[],sup:[],ped:[],merc:[],pagos:[],gastos:[],calc:[],notas:[],alerts:[],trash:[],resets:[],log:[],n:10});
+let db,me=null,view='home',menuOpen=false;
+db=Store.load();
+if(!db)db=seed();
+db.cfg=Object.assign({offerDays:10,notif:false,notifAum:true},db.cfg||{});db.reqs=db.reqs||[];db.calc=db.calc||[];db.users=(db.users||[]).filter(u=>u.email&&u.hash);db.trash=db.trash||[];db.resets=db.resets||[];db.alerts=db.alerts||[];
+
+const save=()=>Store.save(db);
+const iso=(d=new Date())=>{const z=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())};
+const fd=s=>s?s.split('-').reverse().join('/'):'—';
+const hm=()=>new Date().toTimeString().slice(0,5);
+const money=n=>'$'+Number(n||0).toLocaleString('es-AR');
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const dev=()=>{const u=navigator.userAgent;return (/iPhone|iPad/.test(u)?'iOS':/Android/.test(u)?'Android':'PC')+' · '+(screen.width+'x'+screen.height)};
+let _lastId=0;
+// ids únicos entre dispositivos (no un contador local): hora + azar
+const nid=()=>{let v=Date.now()*1000+Math.floor(Math.random()*1000);if(v<=_lastId)v=_lastId+1;_lastId=v;return v};
+const days=s=>Math.round((new Date(s+'T00:00:00')-new Date(iso()+'T00:00:00'))/864e5);
+const vstate=p=>{if(!p.venc)return null;const d=days(p.venc);return d<0?{t:'VENCIDO',c:'var(--warn)'}:d<=7?{t:d===0?'VENCE HOY':'VENCE EN '+d+' DÍAS',c:'var(--y)'}:{t:'EN FECHA',c:'var(--ok)'}};
+const soon=()=>db.prod.filter(p=>p.venc&&days(p.venc)<=db.cfg.offerDays).sort((a,b)=>a.venc<b.venc?-1:1);
+const todayPrice=()=>db.alerts.filter(a=>a.d===iso());
+const aumentosHoy=()=>db.alerts.filter(a=>a.d===iso()&&a.nw>a.old);
+db.alerts.forEach(a=>{if(!a.id)a.id=nid()});db.log.forEach(l=>{if(!l.id)l.id=nid()});db.trash.forEach(t=>{if(!t.id)t.id=t.tid||nid()});
+
+// Historial & Memoria: nada se borra; cada acción guarda quién, cuándo, antes y después.
+// AVISO: hoy vive en localStorage (borrable desde el navegador). Real = tabla de solo agregado en el servidor.
+const SESION=['Ingresó','Cerró sesión'];
+function log(act,detail,old,nw,who){who=who||me;db.log.unshift({id:nid(),u:who.name,uid:who.id,auid:who.uid||null,d:iso(),h:hm(),act,detail,old,nw,dev:dev()});save()}
+function histPage(){return `<h2>🧠 Historial & Memoria</h2><p class="sub">Todo lo que pasó en el negocio. Nada se pierde.</p>${db.log.map(l=>`<div class="card hist"><b>${esc(l.u)}</b><div class="mut">${fd(l.d)} — ${l.h}</div><div style="margin-top:6px">${esc(l.act)}: <b>${esc(l.detail)}</b></div>${l.old!=null?`<div>Antes: ${esc(l.old)}</div>`:''}${l.nw!=null?`<div>Nuevo: ${esc(l.nw)}</div>`:''}<div class="mut" style="font-size:12px">Usuario: ${esc(l.u)} · ${esc(l.dev)}</div></div>`).join('')||'<div class="empty">Sin movimientos.</div>'}`}
+
+// Permisos. AVISO: solo controlan la pantalla. Un permiso real se verifica en el servidor (ver README).
+// Las usuarias tienen permisos operativos amplios. Solo la administradora gestiona cuentas, permisos y seguridad.
+const RQ={users:'Administrar usuarios o permisos',otro:'Otra acción',del:'Eliminar un registro',date:'Cambiar la fecha de un registro'};
+const RQ_OPT=['users','otro'];
+const ADMIN_ONLY=['users','perms','sessions','purge','config'];
+const can=a=>!!me&&(!!me.admin||!ADMIN_ONLY.includes(a)||!!(me.grants&&me.grants[a]>0));
+const useGrant=a=>{if(!me||me.admin||!me.grants)return;if(me.grants[a]>0){me.grants[a]--;save()}};
+
+// Ingreso con CORREO + contraseña, registro, recuperación de contraseña y sesiones.
+// AVISO: en modo demo todo vive en este dispositivo (ver services.js). No es autenticación real hasta conectar un servidor.
+let splash=true,authView='login',authMsg='',sid=null,fpStep=1,fpEmail='',fpCode='',fpDev=null;
+const EMAIL_RE=/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
+const setMsg=t=>{const e=$('#le');if(!e)return;e.textContent=t;if(e.style)e.style.display='block'};
+// ----- sesiones (clave aparte para que otras pestañas del mismo navegador las vean) -----
+const SKEY=KEY+'_sessions';
+const loadSess=()=>{try{return JSON.parse(localStorage.getItem(SKEY))||[]}catch(e){return[]}};
+const saveSess=s=>{try{localStorage.setItem(SKEY,JSON.stringify(s))}catch(e){}};
+const deviceKind=()=>/Android|iPhone|iPad|Mobile/.test(navigator.userAgent)?'Celular':'Computadora';
+function startSess(){const s=loadSess();sid='s'+Date.now()+Math.random().toString(36).slice(2,6);s.unshift({id:sid,uid:me.id,name:me.name,dev:deviceKind(),start:Date.now(),last:Date.now(),on:1});saveSess(s.slice(0,40))}
+function touchSess(){if(Remote.on)return !Remote.revoked;if(!sid||!Store.ok)return true;const s=loadSess(),m=s.find(x=>x.id===sid);if(!m||!m.on)return false;m.last=Date.now();saveSess(s);return true}
+const sessAlive=()=>{if(Remote.on)return !Remote.revoked;if(!sid||!Store.ok)return true;const m=loadSess().find(x=>x.id===sid);return !!(m&&m.on)};
+function endSess(id){if(Remote.on){Remote.endSession(id);return}const s=loadSess(),m=s.find(x=>x.id===id);if(m){m.on=0;m.end=Date.now();saveSess(s)}}
+function endUserSess(uid){if(Remote.on){const u=db.users.find(x=>x.id===uid);if(u)Remote.revokeUser(u.uid);return}const s=loadSess();s.forEach(x=>{if(x.uid===uid&&x.on){x.on=0;x.end=Date.now()}});saveSess(s)}
+function forceOut(){if(FORCING)return;FORCING=true;scStop();if(me)log('Sesión cerrada por la administradora','Su sesión fue cerrada');
+ const fin=()=>{Store.clearSession();me=null;sid=null;view='home';const s=$('#sh');if(s)s.remove();authMsg='Tu sesión fue cerrada por la administradora.';if(Remote.on)Remote.clear();FORCING=false;render()};
+ if(Remote.on){Remote.revoked=true;Remote.flush().catch(()=>{}).then(()=>Remote.signOut()).then(fin,fin)}else fin()}
+const CART=`<svg viewBox="0 0 200 170" aria-hidden="true"><g fill="none" stroke="#7d1f3d" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"><path d="M12 24h26l20 82h86l16-56H46"/></g><rect x="70" y="52" width="16" height="42" rx="7" fill="#E88CA5"/><rect x="92" y="64" width="30" height="30" rx="5" fill="#F7D6DD" stroke="#C9506F" stroke-width="3"/><rect x="128" y="68" width="22" height="26" rx="5" fill="#C9506F"/><circle cx="76" cy="46" r="5" fill="#C9506F"/><circle cx="80" cy="132" r="10" fill="#7d1f3d"/><circle cx="138" cy="132" r="10" fill="#7d1f3d"/><g fill="#E88CA5"><path transform="translate(168 22)" d="M0 6C-16 -10 -9 -24 0 -15C9 -24 16 -10 0 6Z"/><path transform="translate(26 70) scale(.6)" d="M0 6C-16 -10 -9 -24 0 -15C9 -24 16 -10 0 6Z"/></g><path transform="translate(107 78) scale(.45)" d="M0 6C-16 -10 -9 -24 0 -15C9 -24 16 -10 0 6Z" fill="#C9506F"/></svg>`;
+function login(){
+ if(Remote.on&&!Remote.ready){$('#app').innerHTML='<div class="splash"><div class="l">Lucerito</div><p>Cargando…</p></div>';return}
+ if(splash){$('#app').innerHTML=`<div class="splash"><div class="l">Lucerito</div>${CART}<button class="btn" onclick="splash=false;render()">♡ COMENZAR</button></div>`;return}
+ if(authView==='reg')return regForm();
+ if(authView==='forgot')return fpView();
+ if(authView==='recover')return recoverView();
+ const m=authMsg||(BOOTERR?'No se pudo conectar con el servidor: '+BOOTERR:'');authMsg='';
+ $('#app').innerHTML=`<div class="login"><h1>LUCERITO</h1><h2>Iniciar sesión</h2>${m?`<p class="lmsg">${esc(m)}</p>`:''}${Remote.on?'':'<p class="mut">Modo local: las cuentas se guardan solo en este dispositivo. Para que todas usen las mismas cuentas hay que conectar Supabase.</p>'}<label>Correo electrónico</label><input id="lu" type="email" inputmode="email" autocapitalize="none" autocomplete="username"><label>Contraseña</label><input id="lp" type="password" autocomplete="current-password"><button class="btn" onclick="doLogin()">INGRESAR</button><p id="le" class="lmsg" style="display:none"></p><button class="lnk" onclick="authView='forgot';fpStep=1;render()">¿Olvidaste tu contraseña?</button><p>¿Todavía no tenés una cuenta?</p><button class="btn s" onclick="authView='reg';render()">CREAR MI USUARIO</button></div>`}
+function regForm(){const first=!Remote.on&&!db.users.some(u=>u.admin)&&!ENV.ADMIN_EMAIL;
+ $('#app').innerHTML=`<div class="login"><div class="row" style="align-items:flex-start;justify-content:space-between"><div style="flex:1"><h1>LUCERITO</h1><h2>Crear mi usuario</h2></div><div class="pimg xl" id="pv" style="margin:0 0 0 auto">📷</div></div>${first?'<p class="lmsg">Esta es la primera cuenta: va a ser la Administradora principal.</p>':''}<label>Foto de perfil (opcional)</label><input type="file" accept="image/*" onchange="pav(this)"><label>Nombre</label><input id="rn1"><label>Apellido</label><input id="rn2"><label>Nombre de usuario</label><input id="ru" autocapitalize="none"><label>Correo electrónico</label><input id="rm" type="email" inputmode="email" autocapitalize="none"><label>Contraseña</label><input id="rp" type="password" autocomplete="new-password"><label>Repetir contraseña</label><input id="rp2" type="password" autocomplete="new-password"><button class="btn" onclick="doReg()">CREAR MI USUARIO</button><p id="le" class="lmsg" style="display:none"></p><button class="btn s" onclick="authView='login';newAv=null;render()">Volver a iniciar sesión</button></div>`}
+function enter(u){me=u;view='home';authView='login';u.lastAccess={d:iso(),h:hm()};startSess();Store.setSession({uid:u.id,sid});log('Ingresó','Inicio de sesión');save();render()}
+async function doReg(){const n=$('#rn1').value.trim(),a=$('#rn2').value.trim(),u=$('#ru').value.trim().toLowerCase().replace(/\s+/g,''),m=$('#rm').value.trim().toLowerCase(),p=$('#rp').value;
+ if(!n||!u||!m||!p)return setMsg('Completá nombre, usuario, correo y contraseña.');
+ if(!EMAIL_RE.test(m))return setMsg('El correo no tiene un formato válido.');
+ if(p.length<6)return setMsg('La contraseña debe tener al menos 6 caracteres.');
+ if(p!==$('#rp2').value)return setMsg('Las contraseñas no coinciden.');
+ if(db.users.some(x=>x.email===m))return setMsg('Ya existe una cuenta con ese correo.');
+ if(db.users.some(x=>x.id===u))return setMsg('Ese nombre de usuario ya está en uso.');
+ if(Remote.on)return regRemote(n,a,u,m,p);
+ const adminNow=ENV.ADMIN_EMAIL?m===String(ENV.ADMIN_EMAIL).toLowerCase():!db.users.some(x=>x.admin);
+ const x={id:u,email:m,name:n,last:a,on:(adminNow||!db.cfg.approve)?1:0,photo:newAv||'',...(adminNow?{admin:1}:{})};
+ try{await Auth.setPassword(x,p)}catch(err){return setMsg(err.message)}
+ db.users.push(x);newAv=null;save();log('Creó su cuenta',m,null,null,x);
+ if(!x.on){authView='login';authMsg='Tu cuenta fue creada. La administradora tiene que activarla para que puedas ingresar.';return render()}
+ enter(x)}
+async function doLogin(){const m=$('#lu').value.trim().toLowerCase(),p=$('#lp').value,u=db.users.find(x=>x.email===m);
+ if(!m||!p)return setMsg('Escribí tu correo y tu contraseña.');
+ if(Remote.on){const r=await Remote.signIn(m,p);if(r.error)return setMsg(r.error);try{await Remote.afterAuth()}catch(e){authMsg=e.message}return render()}
+ if(!u)return setMsg('Correo o contraseña incorrectos.');
+ let ok=false;try{ok=await Auth.check(u,p)}catch(err){return setMsg(err.message)}
+ if(!ok)return setMsg('Correo o contraseña incorrectos.');
+ if(!u.on)return setMsg('Tu cuenta está desactivada o pendiente de aprobación. Hablá con la administradora.');
+ enter(u)}
+// ----- olvidé mi contraseña -----
+function fpView(){const B=`<button class="btn s" onclick="authView='login';render()">Volver a iniciar sesión</button>`,M='<p id="le" class="lmsg" style="display:none"></p>';let h;
+ if(fpStep===1)h=`<h2>Recuperar contraseña</h2><label>Ingresá tu correo electrónico</label><input id="fe" type="email" inputmode="email" autocapitalize="none"><button class="btn" onclick="fpSend()">ENVIAR CÓDIGO</button>${M}`;
+ else if(fpStep===2)h=`<h2>Ingresá el código</h2>${fpDev?`<p class="lmsg">MODO PRUEBA: el correo NO se envió (no hay servicio de correo conectado). El código es: <b>${esc(fpDev)}</b></p>`:`<p>Te enviamos un código a <b>${esc(fpEmail)}</b>. Vence en 10 minutos.</p>`}<label>Ingresá el código que recibiste por correo</label><input id="fc" inputmode="numeric" maxlength="6"><button class="btn" onclick="fpCheck()">VALIDAR CÓDIGO</button>${M}`;
+ else if(fpStep===3)h=`<h2>Nueva contraseña</h2><label>Nueva contraseña</label><input id="fp1" type="password" autocomplete="new-password"><label>Repetir nueva contraseña</label><input id="fp2" type="password" autocomplete="new-password"><button class="btn" onclick="fpSave()">GUARDAR CONTRASEÑA</button>${M}`;
+ else if(fpStep===5)h=`<h2>Revisá tu correo</h2><p>Si <b>${esc(fpEmail)}</b> está registrado, te enviamos un correo con un enlace para crear una nueva contraseña. Abrí el enlace desde este mismo dispositivo. Si no llega, revisá la carpeta de spam.</p>`;
+ else h=`<h2>Contraseña actualizada correctamente.</h2><p>Ya podés ingresar con tu correo y la nueva contraseña.</p>`;
+ $('#app').innerHTML=`<div class="login"><h1>LUCERITO</h1>${h}${B}</div>`}
+async function fpSend(){const m=$('#fe').value.trim().toLowerCase();if(!EMAIL_RE.test(m))return setMsg('Escribí un correo válido.');
+ if(Remote.on){const r=await Remote.resetEmail(m);if(r.error)return setMsg(r.error);fpEmail=m;fpStep=5;return render()}
+ let r;try{r=await Auth.requestReset(m)}catch(err){return setMsg(err.message)}
+ if(r.unknown)return setMsg('No hay ninguna cuenta con ese correo (este mensaje solo aparece en modo prueba).');
+ if(!r.mailed&&!r.code)return setMsg('Todavía no hay un servicio de correo conectado, por eso no se puede enviar el código. Cuando la app se conecte al servidor de correo, el código llegará a tu email.');
+ fpEmail=m;fpDev=r.code;fpStep=2;render()}
+async function fpCheck(){const c=$('#fc').value.trim();let v;try{v=await Auth.verifyReset(fpEmail,c)}catch(err){return setMsg(err.message)}if(!v.ok)return setMsg(v.msg);fpCode=c;fpStep=3;render()}
+async function fpSave(){const a=$('#fp1').value,b=$('#fp2').value;if(a.length<6)return setMsg('La contraseña debe tener al menos 6 caracteres.');if(a!==b)return setMsg('Las contraseñas no coinciden.');
+ let r;try{r=await Auth.resetPassword(fpEmail,fpCode,a)}catch(err){return setMsg(err.message)}if(!r.ok)return setMsg(r.msg);
+ const u=db.users.find(x=>x.email===fpEmail);if(u){endUserSess(u.id);log('Restableció su contraseña',u.email,null,null,u)}
+ fpStep=4;fpCode='';fpDev=null;render()}
+function logout(){
+ const fin=()=>{Store.clearSession();sid=null;me=null;view='home';menuOpen=false;newAv=null;newImg=null;q='';aq='';vt='todos';authView='login';authMsg='';fpStep=1;const s=$('#sh');if(s)s.remove();if(Remote.on)Remote.clear();render()};
+ if(me){log('Cerró sesión','Cierre de sesión');if(!Remote.on)endSess(sid)}scStop();
+ if(Remote.on)return Remote.flush().catch(()=>{}).then(()=>Remote.signOut()).then(fin,fin);
+ fin()}
+// ----- modo conectado (Supabase) -----
+async function regRemote(n,a,u,m,p){const r=await Remote.signUp({email:m,password:p,username:u,first:n,last:a});if(r.error)return setMsg(r.error);
+ if(!r.session){authView='login';authMsg='Te enviamos un correo para confirmar tu cuenta. Cuando la confirmes, ingresá con tu correo y contraseña.';return render()}
+ PHOTO=newAv||'';newAv=null;try{await Remote.enterFrom(r.user.id)}catch(e){authMsg=e.message}render()}
+function recoverView(){$('#app').innerHTML=`<div class="login"><h1>LUCERITO</h1><h2>Nueva contraseña</h2><label>Nueva contraseña</label><input id="fp1" type="password" autocomplete="new-password"><label>Repetir nueva contraseña</label><input id="fp2" type="password" autocomplete="new-password"><button class="btn" onclick="recoverSave()">GUARDAR CONTRASEÑA</button><p id="le" class="lmsg" style="display:none"></p></div>`}
+async function recoverSave(){const a=$('#fp1').value,b=$('#fp2').value;if(a.length<6)return setMsg('La contraseña debe tener al menos 6 caracteres.');if(a!==b)return setMsg('Las contraseñas no coinciden.');
+ const r=await Remote.updatePassword(a);if(r.error)return setMsg(r.error);
+ await Remote.signOut();Remote.recovering=false;try{history.replaceState(null,'',location.pathname)}catch(e){}
+ authView='login';authMsg='Contraseña actualizada correctamente. Ingresá con tu correo y la nueva contraseña.';render()}
+// Al abrir la app en MODO LOCAL: si la persona no cerró sesión, vuelve a su cuenta (no pide registrarse otra vez).
+function restoreLocal(){if(Remote.on)return;const s=Store.session();if(!s)return;
+ const u=db.users.find(x=>x.id===s.uid&&x.on),live=loadSess().find(x=>x.id===s.sid&&x.on);
+ if(!u||!live){Store.clearSession();return}
+ me=u;sid=s.sid;view=(GO&&NAV.some(n=>n[0]===GO))?GO:'home';splash=false}
+
+const COL={
+sup:{t:'Proveedores',i:'🚚',f:[['name','Nombre'],['contact','Contacto'],['prods','Productos que vende'],['visit','Días de visita/entrega'],['note','Notas','area']],line:x=>[x.name,[x.contact,x.visit].filter(Boolean).join(' · ')]},
+ped:{t:'Pedidos',i:'📋',f:[['sup','Proveedor','sup'],['date','Fecha de llegada','date'],['amt','Importe','num'],['st','Estado','sel',['Agregado','En camino','Recibido']],['note','Notas','area']],line:x=>[x.sup+' — '+money(x.amt),(x.date?'Llega '+fd(x.date):'Sin fecha de llegada')+(x.note?' · '+x.note:'')],st:x=>pedBadge(x),sort:'date'},
+merc:{t:'Mercadería recibida',i:'📦',f:[['sup','Proveedor','sup'],['ped','Pedido relacionado','pedsel'],['date','Fecha','date'],['amt','Importe recibido','num'],['note','Notas','area']],line:x=>[x.sup+' — '+money(x.amt),fd(x.date)+' · '+x.h+' · '+x.u+(x.items&&x.items.length?' · '+x.items.map(i=>i.name+' +'+i.qty).join(', '):(x.prods?' · '+x.prods:''))],st:x=>(x.ped||x.note==='Desde pedido')&&!(x.items&&x.items.length)?'📝 Falta cargar qué llegó':'',sort:'date'},
+pagos:{t:'Pagos diarios',one:'pago diario',i:'💳',f:[['sup','Proveedor','sup'],['amt','Importe','num'],['date','Fecha','date'],['met','Método','sel',['Efectivo','Transferencia','Cheque','Otro']],['note','Nota','area']],line:x=>[x.sup+' — '+money(x.amt),fd(x.date)+' · '+x.met+' · '+x.u],sort:'date'},
+gastos:{t:'Gastos',i:'🛒',f:[['con','Concepto'],['amt','Importe','num'],['date','Fecha','date'],['note','Nota (opcional)','area']],line:x=>[x.con+' — '+money(x.amt),fd(x.date)+' · '+x.u],sort:'date'},
+notas:{t:'Notas',i:'📝',f:[['txt','Nota','area']],line:x=>[x.txt,x.u+' · '+fd(x.date)+' '+x.h]}
+};
+const NAV=[['home','🏠','Inicio'],['jornada','📅','Jornada diaria'],['merc','📦','Mercadería recibida'],['sup','🚚','Proveedores'],['ped','📋','Pedidos'],['pagos','💳','Pagos diarios'],['notas','📝','Notas'],['venc','⏰','Vencimientos'],['alert','🔔','Alertas'],['prod','🏷️','Productos'],['stock','📦','Control de stock'],['hist','🧠','Historial & Memoria'],['trash','🗑️','Papelera'],['users','👥','Usuarios'],['config','⚙️','Configuración'],['perfil','👤','Perfil']];
+
+// Componentes visuales reutilizables
+const pcard=(p,extra='',fn='editProd')=>`<button class="card t" onclick="${fn}(${p.id})"><div class="row">${pimgH(p)}<div class="grow"><div class="big">${esc(p.name)}</div><div class="mut">${esc(p.cat)}${p.sup?' · '+esc(p.sup):''}</div>${extra}</div><div style="text-align:right"><div class="big">${money(offer(p))}${esc(p.unit||'')}</div>${p.disc?`<div class="mut"><s>${money(p.price)}</s> −${p.disc}%</div>`:''}<div class="mut">Stock ${p.stock}</div>${stockTag(p)}</div></div></button>`;
+const offer=p=>Math.round(p.price*(1-(p.disc||0)/100));
+const EMO=[[/papa|patata/,'🥔'],[/lechuga|espinaca|acelga|verdura/,'🥬'],[/tomate/,'🍅'],[/cebolla/,'🧅'],[/zanahoria/,'🥕'],[/manzana/,'🍎'],[/banana|banano/,'🍌'],[/naranja|mandarina/,'🍊'],[/limon|limón/,'🍋'],[/frutilla|fresa/,'🍓'],[/yogur|yogurt|leche/,'🥛'],[/queso|muzzarella|mozzarella/,'🧀'],[/huevo/,'🥚'],[/\bpan\b|tostada|factura/,'🍞'],[/galleta|terrabusi|oreo|bizcocho|alfajor/,'🍪'],[/gaseosa|coca|sprite|fanta|pepsi|jugo/,'🥤'],[/agua/,'💧'],[/cerveza|birra/,'🍺'],[/vino/,'🍷'],[/fideo|pasta|tallar|spaghetti/,'🍝'],[/arroz/,'🍚'],[/carne|asado|bife|milanesa/,'🥩'],[/pollo/,'🍗'],[/salchicha|chorizo/,'🌭'],[/chocolate|golosina|caramelo/,'🍫'],[/helado/,'🍦'],[/papas fritas|snack|chizito/,'🍟'],[/aceite/,'🫒'],[/azucar|azúcar|\bsal\b/,'🧂'],[/cafe|café/,'☕'],[/yerba|mate|\bte\b|té\b/,'🍵'],[/jabon|jabón|shampoo|detergente|lavandina|limpieza/,'🧼'],[/papel higi|servilleta/,'🧻'],[/bolsa/,'🛍️'],[/churro/,'🥐']];
+const emojiFor=n=>{n=String(n||'').toLowerCase();for(const [r,e] of EMO)if(r.test(n))return e;return '🏷️'};
+const prodImg=p=>p.img?`<img src="${p.img}" alt="">`:esc((p.emoji&&p.emoji!=='🏷️')?p.emoji:emojiFor(p.name));
+const pimgH=p=>`<div class="pimg">${prodImg(p)}</div>`;
+const prodOf=a=>db.prod.find(p=>p.id===a.pid)||{emoji:a.emoji,name:a.name};
+function priceCard(a){const p=prodOf(a);return `<div class="card t" style="border-left-color:var(--warn)"><div onclick="editAum(${a.id})" style="cursor:pointer"><div class="row">${pimgH(p)}<div class="grow"><div class="big">${esc(a.name)}</div><div class="mut" style="margin-top:4px">ANTES</div><div class="old">${money(a.old)}${esc(a.unit||'')}</div><div class="mut" style="margin-top:4px">NUEVO</div><div class="new">${money(a.nw)}${esc(a.unit||'')} ${a.nw>a.old?'⬆️':'⬇️'}</div><div class="mut">${esc(a.u)} · ${a.d===iso()?'':fd(a.d)+' '}${a.h}</div></div></div></div><button class="btn s" style="min-height:44px;font-size:15px;margin:8px 0 0" onclick="delAum(${a.id})">🗑️ ELIMINAR</button></div>`}
+const bd=p=>{const d=days(p.venc),v=vstate(p);return `<span class="tag" style="background:${v.c};color:#fff">${d<0?'Vencido':d===0?'Hoy':d+' días'}</span>`};
+function sheet(html){let s=$('#sh');if(!s){s=document.createElement('div');s.id='sh';s.className='sheet';s.onclick=e=>{if(e.target===s)closeSheet()};document.body.appendChild(s)}s.innerHTML='<div>'+html+'</div>'}
+function closeSheet(){const s=$('#sh');if(s)s.remove();render()}
+const chkbox=(on,fn,t)=>`<label style="display:flex;gap:10px;align-items:center;min-height:44px"><input type="checkbox" style="width:26px;min-height:26px" ${on?'checked':''} onchange="${fn}">${t}</label>`;
+const avatar=u=>u.photo?`<img src="${u.photo}" alt="">`:esc((u.name||'?')[0].toUpperCase());
+const TOASTS=[];
+function toast(m){TOASTS.push(m);if(TOASTS.length>30)TOASTS.shift();let t=$('#toast');if(!t||!t.style){t=document.createElement('div');t.id='toast';t.className='toast';document.body.appendChild(t)}t.textContent=m;t.style.display='block';clearTimeout(toast.t);toast.t=setTimeout(()=>{t.style.display='none'},4000)}
+// Confirmación propia (los confirm()/toast() del navegador no funcionan dentro de otras páginas como Claude).
+let ASK=null;
+function ask(msg,fn,yes){ASK=fn;const o=document.createElement('div');o.id='askb';o.className='sheet';o.style.zIndex=15;o.innerHTML=`<div><h2>${esc(msg)}</h2><button class="btn d" onclick="askYes()">${yes||'Sí, eliminar'}</button><button class="btn s" onclick="askNo()">No</button></div>`;document.body.appendChild(o)}
+function askNo(){const o=$('#askb');if(o)o.remove()}
+function askYes(){const f=ASK;ASK=null;askNo();if(f)f()}
+const LOCALBN='<div class="card" style="border-left:6px solid var(--y)"><b>Modo local (sin servidor)</b><div class="mut">Los datos se guardan solo en este dispositivo y NO se comparten con otras personas. Para compartirlos hay que conectar Supabase (ver README).</div></div>';
+
+// Papelera general: toda eliminación va acá, queda en el Historial y se puede restaurar.
+// Solo la administradora elimina definitivamente (y antes queda constancia en el historial).
+const TL={alerts:'Aumento',sup:'Proveedor',ped:'Pedido',merc:'Mercadería recibida',prod:'Producto',notas:'Nota',pagos:'Pago diario',gastos:'Gasto',calc:'Importe de la calculadora',users:'Usuario'};
+const describe=(c,r)=>c==='alerts'?r.name+' · '+money(r.old)+' → '+money(r.nw):c==='sup'?r.name:c==='ped'?r.sup+' · '+money(r.amt)+' · llega '+fd(r.date):c==='merc'?r.sup+' · '+money(r.amt)+' · '+fd(r.date):c==='prod'?r.name:c==='notas'?String(r.txt||'').slice(0,60):c==='pagos'?r.sup+' · '+money(r.amt):c==='gastos'?(r.con||'')+' · '+money(r.amt):c==='calc'?moneyC(r.amt)+' · '+fd(r.date)+(r.u?' · '+r.u:''):c==='users'?(r.name+' '+(r.last||'')).trim()+' ('+r.email+')':'';
+const snap=r=>Object.entries(r).filter(([k,v])=>!['img','hist','smov','items','id','chk','hash','salt','grants'].includes(k)&&v!==''&&v!=null&&typeof v!=='object').map(([k,v])=>k+': '+v).join(' · ');
+function softDelete(c,id){const r=db[c].find(x=>x.id===id);if(!r)return false;db[c]=db[c].filter(x=>x.id!==id);db.trash.unshift({tid:0,coll:c,rec:r,by:me.name,uid:me.id,d:iso(),h:hm()});db.trash[0].tid=db.trash[0].id=nid();log('Eliminó '+TL[c].toLowerCase(),describe(c,r),snap(r),null);save();return true}
+const trashActive=()=>db.trash.filter(t=>!t.restored);
+function restoreT(tid){const t=db.trash.find(x=>x.tid===tid);if(!t||t.restored)return;
+ if(db[t.coll].some(x=>x.id===t.rec.id))return toast('Ese registro ya existe.');
+ if(t.coll==='prod'&&t.rec.barcode&&findByCode(t.rec.barcode))return toast('Ya hay otro producto con ese código de barras.');
+ if(t.coll==='users'&&db.users.some(u=>u.email===t.rec.email))return toast('Ya existe una cuenta con ese correo.');
+ db[t.coll].push(t.rec);t.restored={by:me.name,d:iso(),h:hm()};log('Restauró '+TL[t.coll].toLowerCase(),describe(t.coll,t.rec));save();toast('Restaurado.');render()}
+function purgeAsk(tid){ask('¿Eliminar para siempre? No se puede deshacer. Queda constancia en el historial.',()=>purge(tid),'Sí, eliminar para siempre')}
+function purge(tid){if(!can('purge'))return;const t=db.trash.find(x=>x.tid===tid);if(!t)return;
+ log('Eliminó definitivamente '+TL[t.coll].toLowerCase(),describe(t.coll,t.rec),snap(t.rec)+' · eliminado antes por '+t.by+' el '+fd(t.d)+' '+t.h,null);
+ db.trash=db.trash.filter(x=>x!==t);save();render()}
+function trashPage(){return `<h2>🗑️ Papelera</h2><p class="sub">Lo que se elimina queda acá y en el historial. Se puede restaurar.</p>${trashActive().map(t=>`<div class="card"><div class="mut">${esc(TL[t.coll]||t.coll)}</div><div class="big">${esc(describe(t.coll,t.rec))}</div><div class="mut">Eliminó ${esc(t.by)} · ${fd(t.d)} ${t.h}</div><button class="btn" onclick="restoreT(${t.tid})">♻️ RESTAURAR</button>${can('purge')?`<button class="btn d" onclick="purgeAsk(${t.tid})">🗑️ ELIMINAR PERMANENTEMENTE</button>`:''}</div>`).join('')||'<div class="empty">La papelera está vacía.</div>'}`}
+
+function go(v){view=v;menuOpen=false;render();scrollTo(0,0)}
+function render(){
+ if(me&&!touchSess())return forceOut();
+ if(!me)return login();
+ const cur=NAV.find(n=>n[0]===view);
+ $('#app').innerHTML=`<header><button class="ib" onclick="menuOpen=true;render()" aria-label="Menú">☰</button><h1>LUCERITO<small>ALMACÉN &amp; MÁS</small></h1><button class="ib av" onclick="go('perfil')" aria-label="Mi perfil">${avatar(me)}</button></header><main>${Store.ok===false?'<div class="card" style="border-left:6px solid var(--warn)"><b>⚠️ Los datos NO se están guardando</b><div class="mut">Este navegador bloquea el almacenamiento. Abrí la app en su propio enlace o pestaña.</div></div>':''}${view==='home'&&!Remote.on?LOCALBN:''}${page()}</main>${bnav()}${menuOpen?menu():''}`;
+}
+function menu(){return `<div class="sheet" onclick="menuOpen=false;render()"><div class="menu" onclick="event.stopPropagation()"><h2>Menú</h2>${NAV.filter(n=>n[0]!=='users'||me.admin).map(n=>`<button class="${view===n[0]?'on':''}" onclick="go('${n[0]}')">${n[1]}  ${n[2]}</button>`).join('')}</div></div>`}
+
+function page(){
+ if(view==='home')return home();
+ if(view==='jornada')return jornada();
+ if(view==='config')return cfgPage();
+ if(view==='perfil')return perfilPage();
+ if(view==='stock')return stockPage();
+ if(view==='trash')return trashPage();
+ if(view==='prod')return prodPage();
+ if(view==='venc')return vencPage();
+ if(view==='alert')return alertPage();
+ if(view==='hist')return histPage();
+ if(view==='users')return usersPage()+perms();
+ return colPage(view);
+}
+function home(){
+ const t=iso(),s=soon(),au=aumentosHoy();
+ const cnt=k=>db[k].filter(x=>x.date===t).length;
+ const venc=s.length?`<div class="card big-alert"><div class="ba-h">⚠️ ATENCIÓN</div><div class="ba-t">PRODUCTOS POR VENCER</div>${s.slice(0,4).map(p=>`<div class="ba-row"><div class="pimg lg">${p.img?`<img src="${p.img}" alt="">`:esc(p.emoji||'🏷️')}</div><div class="grow"><div class="big">${esc(p.name)}</div><div>📅 Vence: ${fd(p.venc)}</div><div>⏳ ${days(p.venc)<0?'Vencido':days(p.venc)===0?'Vence hoy':'Faltan '+days(p.venc)+' días'}</div>${!p.disc&&days(p.venc)>=0?'<span class="tag" style="background:var(--y)">🏷️ Falta definir oferta</span>':''}</div></div><button class="btn s" onclick="vt='todos';go('venc')">→ VER DETALLES</button>`).join('')}${s.length>4?`<div class="mut">y ${s.length-4} más…</div>`:''}</div>`:`<div class="card ok-alert"><div style="font-size:34px">✅</div><div class="big">Sin vencimientos cercanos</div><div class="mut">No hay productos por vencer en los próximos ${db.cfg.offerDays} días.</div></div>`;
+ const stk=stockHome()+pedHome();
+ const aum=`<div class="card aum"><div class="ba-t" style="margin-bottom:6px">📈 AUMENTOS DEL DÍA</div><input class="bigin" placeholder="🔍 Buscar producto..." oninput="aq=this.value;$('#aul').innerHTML=aumList()" value="${esc(aq)}"><div id="aul">${aumList()}</div><button class="btn" onclick="addAum()">+ Registrar aumento</button></div>`;
+ return `<h2>Hoy — ${fd(t)}</h2>${venc}${stk}${aum}
+ <div class="grid">
+ ${[['📦','Mercadería recibida',cnt('merc'),'merc'],['🚚','Proveedores',db.sup.length,'sup'],['📋','Pedidos en camino',db.ped.filter(x=>pedEff(x)==='En camino').length,'ped'],['💳','Pagos diarios hoy',cnt('pagos'),'pagos'],['📝','Notas',db.notas.length,'notas'],['🧠','Historial',db.log.filter(l=>l.d===t).length+' hoy','hist']].map(c=>`<button class="card t" onclick="go('${c[3]}')"><div style="font-size:26px">${c[0]}</div><div class="big">${c[2]}</div><div class="mut">${c[1]}</div></button>`).join('')}
+ </div>
+ <h2 class="ar" style="margin-top:22px">Actividad reciente</h2>
+ ${db.log.filter(l=>!SESION.includes(l.act)).slice(0,5).map(l=>`<div class="card hist"><b>${esc(l.u)}</b> ${esc(l.act.toLowerCase())}: ${esc(l.detail)}<div class="mut">${fd(l.d)} — ${l.h}</div></div>`).join('')||'<div class="empty">Todavía no hay movimientos hoy.</div>'}`;
+}
+function alertPage(){const all=db.alerts.filter(a=>a.d===iso()),s=soon();return `<h2>🔔 Alertas</h2><p class="sub">Hoy — ${fd(iso())}</p>${pedHome()}${stockAlerts().length?`<h2>📦 Stock</h2>${stockAlerts().map(stockCard).join('')}`:''}${s.length?`<h2>⏰ Por vencer</h2>${s.map(p=>pcard(p,bd(p),'openAlert')).join('')}`:''}<h2>📈 Cambios de precio de hoy</h2>${all.map(priceCard).join('')||'<div class="empty">No hubo cambios de precio hoy.</div>'}`}
+let vt='todos';
+const CK=['Oferta publicada','Cartel colocado','Producto ubicado adelante'];
+const offerBlock=(p,d)=>d>=0&&d<=db.cfg.offerDays?`<div class="card" style="border-left:6px solid var(--y)"><div class="big">⚠️ ATENCIÓN</div><b>🏷️ SUGERENCIA DE OFERTA</b><div class="mut">A partir de hoy faltan ${d} días.</div><div class="tabs" style="flex-wrap:wrap;margin-top:10px">${[10,20,30,40,50].map(x=>`<button class="${p.disc===x?'on':''}" style="min-width:30%" onclick="setDisc(${p.id},${x})">${x} %<br><small>${money(Math.round(p.price*(1-x/100)))}</small></button>`).join('')}</div><label>Otro porcentaje</label><input id="cust" type="number" min="0" max="100" inputmode="decimal" placeholder="Ej: 35"><button class="btn s" onclick="setDisc(${p.id},Number($('#cust').value))">Aplicar porcentaje</button></div>`:'';
+function setDisc(id,x){const p=db.prod.find(y=>y.id===id);if(!(x>=0&&x<=100))return toast('Escribí un porcentaje entre 0 y 100');log('Estableció oferta',p.name,(p.disc||0)+'%',x+'%');p.disc=x;save();openAlert(id)}
+function openAlert(id){const p=db.prod.find(x=>x.id===id),v=vstate(p),d=days(p.venc);p.chk=p.chk||[0,0,0];
+ sheet(`<div class="row">${pimgH(p)}<div class="big">${esc(p.name)}</div></div><div class="card" style="background:${v.c};color:#fff;text-align:center;font-weight:bold;font-size:20px;margin-top:12px">${d<0?'Vencido':d===0?'¡Vence hoy!':'¡Se vence en '+d+' días!'}</div><div class="card">Vencimiento: <b>${fd(p.venc)}</b><br>Stock actual: <b>${p.stock} unidades</b></div>${offerBlock(p,d)}<div class="row"><div class="card grow">Precio normal<br><b>${p.disc?`<s>${money(p.price)}</s>`:money(p.price)}</b></div><div class="card grow" style="background:var(--p1)">Precio oferta<br><b>${money(offer(p))}</b></div></div><button class="btn" onclick="editProd(${id})">Editar producto</button>${CK.map((t,i)=>`<label style="display:flex;gap:10px;align-items:center;min-height:44px"><input type="checkbox" style="width:26px;min-height:26px" ${p.chk[i]?'checked':''} onchange="chk(${id},${i},this.checked)">${t}</label>`).join('')}<button class="btn s" onclick="closeSheet()">Volver</button>`)}
+function chk(id,i,c){const p=db.prod.find(x=>x.id===id);p.chk[i]=c?1:0;log('Actualizó seguimiento de oferta',p.name+' — '+CK[i],null,c?'Sí':'No')}
+function changePrice(p,nw,act,oldOv){const old=oldOv!=null?oldOv:p.price;p.hist.push({d:iso(),h:hm(),old,nw,u:me.name});db.alerts.unshift({id:nid(),d:iso(),h:hm(),u:me.name,pid:p.id,name:p.name,emoji:p.emoji||emojiFor(p.name),old,nw,unit:p.unit||''});p.price=nw;log(act,p.name,money(old)+(p.unit||''),money(nw)+(p.unit||''));if(nw>old){notify(p.name+': antes '+money(old)+', nuevo '+money(nw));Remote.notify('aumentos','📈 AUMENTO',p.name+': ahora '+money(nw)+(p.unit||''),'home')}}
+const findProdName=n=>{n=String(n||'').trim().toLowerCase();return n?db.prod.find(p=>p.name.trim().toLowerCase()===n):null};
+function aumSel(){const n=$('#aq').value.trim(),p=findProdName(n),im=$('#apimg'),m=$('#apmsg');if(im)im.innerHTML=prodImg(p||{name:n});if(p){$('#aold').value=p.price;if($('#aun'))$('#aun').value=p.unit||'';if(m)m.textContent='Producto cargado: precio actual '+money(p.price)+(p.unit||'')}else if(m)m.textContent=n?'Producto nuevo: se guarda con el nombre que escribiste.':'Podés escribir cualquier producto.'}
+function addAum(){sheet(`<h2>📈 Registrar aumento</h2><label>Producto</label><input id="aq" class="bigin" list="apl" placeholder="Escribí o elegí un producto" oninput="aumSel()" autocomplete="off"><datalist id="apl">${db.prod.map(p=>`<option value="${esc(p.name)}">`).join('')}</datalist><div class="row" style="margin-bottom:6px"><div class="pimg" id="apimg">🏷️</div><div class="mut grow" id="apmsg">Podés escribir cualquier producto.</div></div><label>Antes</label><input id="aold" class="bigin" type="number" inputmode="decimal"><label>Nuevo precio</label><input id="anw" class="bigin" type="number" inputmode="decimal"><label>Unidad (opcional, ej: /kg)</label><input id="aun" class="bigin"><button class="btn" onclick="saveAum()">Guardar aumento</button><button class="btn s" onclick="closeSheet()">Volver</button>`)}
+function saveAum(){const name=$('#aq').value.trim(),oldS=String($('#aold').value).trim(),nw=Number($('#anw').value),p=findProdName(name);
+ if(!name)return toast('Escribí el producto');
+ const old=oldS!==''?Number(oldS):(p?p.price:NaN);
+ if(!(old>=0))return toast('Escribí el precio de antes');
+ if(!(nw>0))return toast('Escribí el nuevo precio');
+ if(nw===old)return toast('El precio nuevo es igual al anterior');
+ const unit=String($('#aun').value||'').trim();
+ if(p){if(unit&&!p.unit)p.unit=unit;changePrice(p,nw,'Registró aumento',old)}
+ else{db.alerts.unshift({id:nid(),d:iso(),h:hm(),u:me.name,pid:null,name,emoji:emojiFor(name),old,nw,unit});log('Registró aumento',name,money(old)+unit,money(nw)+unit);if(nw>old){notify(name+': antes '+money(old)+', nuevo '+money(nw));Remote.notify('aumentos','📈 AUMENTO',name+': ahora '+money(nw)+unit,'home')}}
+ save();closeSheet()}
+function editAum(id){const a=db.alerts.find(x=>x.id===id);if(!a)return;sheet(`<h2>📈 ${esc(a.name)}</h2><div class="card"><div class="mut">ANTES</div><div class="old">${money(a.old)}${esc(a.unit||'')}</div></div><label>NUEVO precio</label><input id="anw" class="bigin" type="number" inputmode="decimal" value="${a.nw}"><button class="btn" onclick="saveEditAum(${id})">Guardar</button><button class="btn d" onclick="delAum(${id})">🗑️ ELIMINAR</button><button class="btn s" onclick="closeSheet()">Volver</button>`)}
+function saveEditAum(id){const a=db.alerts.find(x=>x.id===id),nw=Number($('#anw').value);if(!nw||nw<=0)return toast('Escribí el precio nuevo');if(nw!==a.nw){const p=db.prod.find(x=>x.id===a.pid);log('Corrigió aumento',a.name,money(a.nw)+(a.unit||''),money(nw)+(a.unit||''));a.nw=nw;a.u=me.name;a.h=hm();if(p){p.price=nw;p.hist.push({d:iso(),h:hm(),old:a.old,nw,u:me.name})}save()}closeSheet()}
+function delAum(id){ask('¿Eliminar este aumento? Sale de la lista, va a la papelera y queda en el historial.',()=>{softDelete('alerts',id);closeSheet()})}
+const supCard=x=>`<div class="card t"><div onclick="editCol('sup',${x.id})" style="cursor:pointer"><div class="row"><div class="big grow">${esc(x.name)}</div>${x.visit?`<span class="tag" style="background:var(--p2);color:#fff">${esc(x.visit)}</span>`:''}</div><div class="mut" style="font-size:12px;margin-top:6px">Productos que vende</div><div style="font-size:13px">${esc(x.prods||'—')}</div>${x.contact?`<div class="mut" style="font-size:13px">📞 ${esc(x.contact)}</div>`:''}</div><div class="row" style="margin-top:8px"><button class="btn s" style="min-height:44px;margin:0" onclick="editCol('sup',${x.id})">✏️ Editar</button><button class="btn s" style="min-height:44px;margin:0" onclick="delCol('sup',${x.id})">🗑️ Eliminar</button></div></div>`;
+function prodPage(){return `<h2>🏷️ Productos</h2><button class="btn big" onclick="scanProducts()">📷 ESCANEAR CÓDIGO DE BARRAS</button><input class="bigin" placeholder="🔍 Buscar producto por nombre o código" oninput="q=this.value;$('#pl').innerHTML=plist()" value="${esc(q)}"><button class="btn" style="margin-top:12px" onclick="editProd(0)">AGREGAR PRODUCTO MANUALMENTE</button><div id="pl">${plist()}</div>`}
+let q='',aq='';
+const matchP=(p,t)=>{t=t.trim().toLowerCase();return !t||[p.name,p.brand].some(x=>String(x||'').toLowerCase().includes(t))||String(p.barcode||'').includes(t)};
+const plist=()=>db.prod.filter(p=>matchP(p,q)).map(p=>pcard(p)).join('')||'<div class="empty">Sin resultados.</div>';
+function aumList(){const t=aq.trim().toLowerCase();
+ if(!t){const au=aumentosHoy();return (au.slice(0,5).map(priceCard).join('')||'<div class="mut" style="margin:8px 0">Hoy no se registraron aumentos.</div>')+(au.length>5?`<button class="btn s" onclick="go('alert')">Ver los ${au.length} aumentos</button>`:'')}
+ return db.alerts.filter(a=>a.nw>a.old).filter(a=>{const p=prodOf(a);return [a.name,p.brand].some(x=>String(x||'').toLowerCase().includes(t))||String(p.barcode||'').includes(t)}).map(priceCard).join('')||'<div class="mut" style="margin:8px 0">No hay aumentos para esa búsqueda.</div>'}
+const DIAS=['DOMINGO','LUNES','MARTES','MIÉRCOLES','JUEVES','VIERNES','SÁBADO'];
+const dayHead=d=>d?DIAS[new Date(d+'T00:00:00').getDay()]+' '+fd(d).slice(0,5):'SIN FECHA';
+function colPage(k){const c=COL[k];let l=db[k].slice();if(k==='ped')l=l.filter(x=>(x.st==='Recibido')===(ptab==='rec'));if(c.sort)l.sort((a,b)=>a[c.sort]<b[c.sort]?-1:1);let last='';
+ return `<h2>${c.i} ${c.t}</h2><button class="btn" onclick="editCol('${k}',0)">+ Agregar</button>${k==='ped'?calcCard()+pedTabs():''}${l.map(x=>{const ln=c.line(x);let hd='';if(k==='ped'&&x.date!==last){last=x.date;hd=`<h2 style="font-size:18px;margin-top:16px">${dayHead(x.date)}</h2>`}if(k==='sup')return supCard(x);return hd+`<button class="card t" onclick="editCol('${k}',${x.id})"><div class="big">${esc(ln[0])}</div><div class="mut">${esc(ln[1])}</div>${c.st&&c.st(x)?`<div style="margin-top:6px"><b>${c.st(x)}</b></div>`:''}</button>${k==='ped'&&x.st!=='Recibido'?`<button class="btn s" style="margin-top:-4px" onclick="recibirPed(${x.id})">🟢 MARCAR RECIBIDO</button>`:''}`}).join('')||'<div class="empty">Todavía no hay registros. Tocá “Agregar”.</div>'}`}
+function recibirPed(id){const x=db.ped.find(y=>y.id===id);x.st='Recibido';log('Marcó pedido como recibido',x.sup+' — '+money(x.amt));let mid=0;if(!db.merc.some(m=>m.ped===id)){mid=nid();db.merc.push({id:mid,ped:id,sup:x.sup,date:iso(),amt:x.amt,prods:'',qty:'',note:'Desde pedido',u:me.name,h:hm()});log('Registró mercadería recibida',x.sup+' '+money(x.amt))}save();render();if(mid){toast('Pasó a Mercadería recibida: cargá qué llegó.');mercForm(mid)}}
+
+/* Formularios */
+function field(f,v){const [k,l,t,o]=f;let h=`<label>${l}</label>`;
+ if(t==='area')h+=`<textarea id="f_${k}" rows="3">${esc(v)}</textarea>`;
+ else if(t==='sel')h+=`<select id="f_${k}">${o.map(x=>`<option ${x===v?'selected':''}>${x}</option>`).join('')}</select>`;
+ else if(t==='barcode')h+=`<button type="button" class="btn big" onclick="scanForForm()">📷 ESCANEAR CÓDIGO DE BARRAS</button><input id="f_barcode" class="bigin" inputmode="numeric" placeholder="O escribí el código" value="${esc(v)}"><div id="bcm" class="mut"></div>`;
+ else if(t==='pedsel')h+=`<select id="f_ped"><option value="0">Sin pedido</option>${db.ped.filter(x=>x.st!=='Recibido'||x.id===Number(v)).map(x=>`<option value="${x.id}" ${x.id===Number(v)?'selected':''}>${esc(x.sup)} — ${fd(x.date)} — ${money(x.amt)}</option>`).join('')}</select>`;
+ else if(t==='sup'){const L=db.sup.map(s=>s.name);if(v&&!L.some(n=>n.toLowerCase()===String(v).toLowerCase()))L.push(v);h+=`<select id="f_${k}" onchange="supSel(this)"><option value="">— Elegí un proveedor —</option>${L.map(n=>`<option value="${esc(n)}" ${n===v?'selected':''}>${esc(n)}</option>`).join('')}<option value="__new__">+ Agregar nuevo proveedor</option></select><input id="f_${k}new" class="bigin" style="display:none" placeholder="Nombre del nuevo proveedor">`}
+ else h+=`<input ${t==='date'&&ED&&!can('date')?'disabled title="Solo la administradora puede cambiar la fecha"':''} id="f_${k}" type="${t==='num'?'number':t==='date'?'date':'text'}" ${t==='num'?'inputmode="decimal"':''} value="${esc(v)}">`;
+ if(t==='date'&&ED&&!can('date'))h+='<button type="button" class="btn s" onclick="reqSheet(\'date\')">🔒 SOLICITAR PERMISO para cambiar la fecha</button>';
+ return h}
+const val=(f)=>{if(f[2]==='sup')return supName(f[0]);const e=$('#f_'+f[0]);return f[2]==='num'||f[2]==='pedsel'?Number(e.value||0):e.value.trim()};
+let ED=false;function editCol(k,id,pre){if(k==='merc')return mercForm(id);ED=!!id;const c=COL[k];const x=id?db[k].find(y=>y.id===id):{date:k==='ped'?'':iso(),st:k==='ped'?'Agregado':'En camino',met:'Efectivo',...(pre||{})};
+ sheet(`<h2>${c.i} ${id?'Editar':'Nuevo'}</h2>${c.f.map(f=>field(f,x[f[0]]??'')).join('')}${k==='sup'&&id?supHist(x.name):''}<button class="btn" onclick="saveCol('${k}',${id})">Guardar</button>${id&&!can('del')?'<button class="btn s" onclick="reqSheet(\'del\')">🔒 SOLICITAR PERMISO para eliminar</button>':''}${id&&can('del')?`<button class="btn d" onclick="delCol('${k}',${id})">🗑️ ELIMINAR</button>`:''}<button class="btn s" onclick="closeSheet()">Cancelar</button>`)}
+function saveCol(k,id){const c=COL[k];const vals={};c.f.forEach(f=>vals[f[0]]=val(f));
+ if(k==='ped'&&!vals.sup)return toast('Elegí el proveedor');
+ if(id){const x=db[k].find(y=>y.id===id);const ch=c.f.filter(f=>String(x[f[0]]??'')!==String(vals[f[0]])).map(f=>f[1]+': '+(x[f[0]]??'—')+' → '+vals[f[0]]);
+  if(!me.admin&&ch.some(z=>z.startsWith('Fecha')))useGrant('date');Object.assign(x,vals);log('Modificó '+c.t.toLowerCase(),c.line(x)[0],null,ch.join(' | '));const fc=ch.filter(z=>z.startsWith('Fecha'));if(fc.length)log('Cambió fecha manualmente',c.line(x)[0],null,fc.join(' | '));
+  if(k==='ped'&&vals.st==='Recibido'&&!db.merc.some(m=>m.ped===id)){const m={id:nid(),ped:id,sup:x.sup,date:iso(),amt:x.amt,note:'Desde pedido',u:me.name,h:hm()};db.merc.push(m);PENDM=m.id;log('Registró mercadería recibida',x.sup+' '+money(x.amt))}}
+ else{const x={id:nid(),...vals,u:me.name,h:hm()};if(!x.date&&k!=='sup'&&k!=='ped')x.date=iso();if(k==='ped')x.cd=iso();db[k].push(x);log('Agregó '+(c.one||c.t.toLowerCase().replace(/s$/,'')),c.line(x)[0]);if(k==='ped')Remote.notify('pedidos','📋 NUEVO PEDIDO',x.sup+(x.date?' llega el '+fd(x.date):' fue agregado a Pedidos'),'ped');if(k==='merc'&&x.ped){const o=db.ped.find(y=>y.id===x.ped);if(o&&o.st!=='Recibido'){o.st='Recibido';log('Marcó pedido como recibido',o.sup+' — '+money(o.amt))}}}
+ save();closeSheet();if(PENDM){const i=PENDM;PENDM=0;toast('Pasó a Mercadería recibida: cargá qué llegó.');mercForm(i)}}
+function delCol(k,id){ask('¿Eliminar este registro? Va a la papelera y queda en el historial.',()=>{softDelete(k,id);closeSheet()})}
+
+const PF=[['name','Nombre'],['barcode','Código de barras','barcode'],['cat','Categoría'],['sup','Proveedor','sup'],['price','Precio normal','num'],['unit','Unidad del precio (ej: /kg)'],['disc','Descuento / oferta (%)','num'],['stock','Stock actual','num'],['min','Stock mínimo','num'],['venc','Fecha de vencimiento','date'],['emoji','Emoji']];
+function editProd(id,pick,pre){ED=false;EDP=id||0;
+ if(pick&&!id){sheet(`<h2>Elegí el producto</h2>${db.prod.map(p=>`<button class="card t" onclick="editProd(${p.id})">${esc(p.emoji)} ${esc(p.name)}</button>`).join('')}<button class="btn s" onclick="closeSheet()">Cancelar</button>`);return}
+ const p=id?db.prod.find(x=>x.id===id):{price:0,disc:0,stock:0,min:0,emoji:'🏷️',barcode:pre||''};
+ sheet(`<h2>${id?esc(p.name):'Producto nuevo'}</h2>${!id&&pre?`<div class="card">Código detectado: <b>${esc(pre)}</b></div>`:''}${PF.map(f=>field(f,p[f[0]]??'')).join('')}<div class="card" style="margin-top:12px">Precio oferta: <b id="po">${money(offer(p))}</b></div>
+ ${id?stockHist(p):''}
+ ${id&&p.hist.length?`<label>Historial de precios</label>${p.hist.slice().reverse().map(h=>`<div class="mut">${fd(h.d)} ${h.h} · ${money(h.old)} → ${money(h.nw)} (${esc(h.u)})</div>`).join('')}`:''}
+ <button class="btn" onclick="saveProd(${id})">${id?'GUARDAR':'GUARDAR PRODUCTO'}</button>${id&&!can('del')?'<button class="btn s" onclick="reqSheet(\'del\')">🔒 SOLICITAR PERMISO para eliminar</button>':''}${id&&can('del')?`<button class="btn d" onclick="delProd(${id})">🗑️ ELIMINAR PRODUCTO</button>`:''}<button class="btn s" onclick="closeSheet()">Cancelar</button>`);
+ ['f_price','f_disc'].forEach(i=>$('#'+i).oninput=()=>$('#po').textContent=money(Math.round(Number($('#f_price').value||0)*(1-Number($('#f_disc').value||0)/100))));
+}
+let newImg=null;
+function pimg(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=120;const x=c.getContext('2d');const s=Math.min(im.width,im.height);x.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,120,120);newImg=c.toDataURL('image/jpeg',.7)};im.src=r.result};r.readAsDataURL(f)}
+function saveProd(id){const v={};PF.forEach(f=>v[f[0]]=val(f));if(!v.name)return toast('Escribí el nombre');v.disc=Math.min(100,Math.max(0,v.disc));v.barcode=(v.barcode||'').trim();const dup=v.barcode&&db.prod.find(x=>x.id!==id&&norm(x.barcode)===norm(v.barcode));if(dup)return toast('Ese código ya está registrado en: '+dup.name);
+ if(!v.emoji||v.emoji==='🏷️')v.emoji=emojiFor(v.name);if(newImg){v.img=newImg;newImg=null}
+ if(id){const p=db.prod.find(x=>x.id===id);
+  if(p.price!==v.price){changePrice(p,v.price,'Modificó precio')}
+  if(p.stock!==v.stock)stockMove(p,v.stock,'Ajuste manual');
+  if(p.venc!==v.venc)log(p.venc?'Modificó vencimiento':'Agregó vencimiento',p.name,p.venc?fd(p.venc):null,fd(v.venc));
+  if(p.disc!==v.disc)log('Modificó oferta',p.name,p.disc+'%',v.disc+'%');
+  if(p.name!==v.name||p.cat!==v.cat||p.sup!==v.sup)log('Modificó producto',p.name,p.name+' / '+p.cat+' / '+p.sup,v.name+' / '+v.cat+' / '+v.sup);
+  const nv=v.venc;delete v.venc;const ov=p.venc||'';Object.assign(p,v);applyVencEdit(p,ov,nv)}
+ else{const np={id:nid(),hist:[],smov:[],...v,stock:0};if(v.venc){np.lots=[{id:nid(),venc:v.venc,qty:'',note:'',u:me.name,d:iso()}];syncVenc(np)}db.prod.push(np);log('Agregó producto',v.name,null,money(v.price)+' · stock '+v.stock);if(v.stock>0)stockMove(np,v.stock,'Stock inicial')}
+ save();closeSheet()}
+function delProd(id){ask('¿Eliminar el producto? Va a la papelera; su historial se conserva.',()=>{softDelete('prod',id);closeSheet()})}
+
+const supHist=n=>{const P=db.ped.filter(x=>x.sup===n),Q=db.pagos.filter(x=>x.sup===n);return `<h2 style="font-size:18px;margin-top:16px">Historial de pedidos</h2>${P.map(x=>`<div class="mut">${fd(x.date)} · ${money(x.amt)} · ${x.st}</div>`).join('')||'<div class="mut">Sin pedidos.</div>'}<h2 style="font-size:18px;margin-top:16px">Historial de pagos</h2>${Q.map(x=>`<div class="mut">${fd(x.date)} · ${money(x.amt)} · ${esc(x.met)}</div>`).join('')||'<div class="mut">Sin pagos.</div>'}`};
+
+function supName(k){const e=$('#f_'+k);if(!e)return '';if(e.value==='__new__'){const n=String($('#f_'+k+'new').value||'').trim();if(n)ensureSup(n);return n}return String(e.value||'').trim()}
+function ensureSup(n){if(db.sup.some(s=>s.name.trim().toLowerCase()===n.toLowerCase()))return;db.sup.push({id:nid(),name:n,contact:'',prods:'',visit:'',note:'',u:me.name,h:hm(),date:iso()});log('Agregó proveedor',n);save()}
+function supSel(sel){const e=$('#'+sel.id+'new');if(e&&e.style)e.style.display=sel.value==='__new__'?'block':'none'}
+
+// Lector de códigos de barras con la cámara del celular. NUNCA simula una lectura.
+// Camino 1: BarcodeDetector nativo (Chrome/Edge en Android y PC). Camino 2: librería ZXing cargada desde CDN
+// (Safari/iPhone, Firefox): PREPARADO pero SIN PROBAR en este entorno (no hay cámara). Siempre existe la entrada manual.
+// La cámara solo funciona con https (Vercel lo da) y si el navegador/host la permite.
+const norm=c=>{c=String(c||'').trim();return /^\d+$/.test(c)?c.replace(/^0+/,''):c.toUpperCase()};
+const findByCode=c=>c?db.prod.find(p=>p.barcode&&norm(p.barcode)===norm(c)):null;
+let EDP=0;
+const SC={stream:null,timer:0,cb:null,done:true,reader:null,ctl:null};
+const FORMATS=['ean_13','ean_8','upc_a','upc_e','code_128','code_39','itf'];
+function scStop(){SC.done=true;clearTimeout(SC.timer);try{SC.ctl&&SC.ctl.stop()}catch(e){}try{SC.reader&&SC.reader.reset&&SC.reader.reset()}catch(e){}SC.ctl=null;SC.reader=null;if(SC.stream){SC.stream.getTracks().forEach(t=>t.stop());SC.stream=null}const o=$('#scs');if(o)o.remove()}
+function scFinish(code){if(SC.done)return;const cb=SC.cb;scStop();code=String(code).trim().replace(/[^\w.\-]/g,'');if(cb&&code)cb(code)}
+const scMsg=t=>{const e=$('#scm');if(e)e.textContent=t};
+function scanBarcode(cb){scStop();SC.cb=cb;SC.done=false;
+ const o=document.createElement('div');o.id='scs';o.className='sheet';o.style.zIndex=12;
+ o.innerHTML=`<div><h2>📷 Escanear código de barras</h2><video id="scv" playsinline muted style="width:100%;max-height:45vh;border-radius:16px;background:#000;object-fit:cover"></video><p class="mut" id="scm">Pidiendo acceso a la cámara…</p><button class="btn s" id="scnew" style="display:none" onclick="window.open(location.href,'_blank')">Abrir la app en una pestaña nueva</button><label>O escribí el código</label><input id="scman" class="bigin" inputmode="numeric" placeholder="Ej: 7791234567890"><button class="btn" onclick="scManual()">Usar este código</button><button class="btn s" onclick="scStop()">Volver</button></div>`;
+ document.body.appendChild(o);scStart()}
+function scManual(){const c=$('#scman').value.trim();if(c.length<4)return scMsg('Escribí un código válido (mínimo 4 caracteres).');scFinish(c)}
+async function scStart(){
+ try{
+  if(!(navigator.mediaDevices&&navigator.mediaDevices.getUserMedia))throw new Error('Este navegador no permite usar la cámara (hace falta https).');
+  SC.stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false});
+  if(SC.done){scStop();return}
+  const v=$('#scv');
+  if('BarcodeDetector' in window){
+   v.srcObject=SC.stream;await v.play();scMsg('Apuntá la cámara al código de barras.');
+   const det=new BarcodeDetector({formats:FORMATS});
+   const tick=async()=>{if(SC.done)return;try{const r=await det.detect(v);if(r.length)return scFinish(r[0].rawValue)}catch(e){}SC.timer=setTimeout(tick,200)};tick();
+  }else{SC.stream.getTracks().forEach(t=>t.stop());SC.stream=null;scMsg('Preparando lector…');await scZxing(v)}
+ }catch(e){scMsg(scErr(e));const b=$('#scnew');if(b&&b.style&&window.top!==window.self)b.style.display='block'}
+}
+function loadScript(src){return new Promise((ok,no)=>{const s=document.createElement('script');s.src=src;s.onload=ok;s.onerror=()=>no(new Error('No se pudo cargar el lector alternativo.'));document.head.appendChild(s)})}
+async function scZxing(v){
+ if(!window.ZXing)await loadScript('https://cdn.jsdelivr.net/npm/@zxing/library@0.21.3/umd/index.min.js');
+ const Z=window.ZXing,h=new Map();h.set(Z.DecodeHintType.POSSIBLE_FORMATS,[Z.BarcodeFormat.EAN_13,Z.BarcodeFormat.EAN_8,Z.BarcodeFormat.UPC_A,Z.BarcodeFormat.UPC_E,Z.BarcodeFormat.CODE_128,Z.BarcodeFormat.CODE_39]);
+ SC.reader=new Z.BrowserMultiFormatReader(h);
+ SC.ctl=await SC.reader.decodeFromConstraints({video:{facingMode:{ideal:'environment'}}},v,res=>{if(res)scFinish(res.getText())});
+ scMsg('Apuntá la cámara al código de barras.');
+}
+// Escaneo desde la ficha del producto: rellena el campo y evita duplicados.
+function scanForForm(){scanBarcode(code=>{const inp=$('#f_barcode'),m=$('#bcm'),ex=findByCode(code);if(inp)inp.value=code;
+ if(ex&&ex.id!==EDP){if(m)m.innerHTML='⚠️ Ese código ya está registrado en <b>'+esc(ex.name)+'</b>. <button class="btn s" onclick="editProd('+ex.id+')">Abrir ese producto</button>';return}
+ if(EDP){const p=db.prod.find(x=>x.id===EDP);if(p&&p.barcode!==code){log('Asoció código de barras',p.name,p.barcode||'—',code);p.barcode=code;save()}}
+ if(m)m.textContent=EDP?'✅ Código guardado en la ficha.':'✅ Código leído. Completá la ficha y tocá Guardar.'})}
+// Escaneo desde Productos: abre la ficha o ofrece crear el producto.
+function scanProducts(){scanBarcode(code=>{const p=findByCode(code);if(p)return editProd(p.id);
+ sheet(`<h2>Producto no encontrado</h2><div class="card">Código detectado: <b>${esc(code)}</b><div class="mut">Todavía no hay un producto con este código.</div></div><button class="btn big" onclick="editProd(0,false,'${esc(code)}')">CREAR NUEVO PRODUCTO</button><button class="btn s" onclick="closeSheet()">Volver</button>`)})}
+function scErr(e){const n=e&&e.name,fr=window.top!==window.self;
+ if(n==='NotAllowedError'||n==='SecurityError')return 'No hay permiso para usar la cámara. Puede ser que no lo hayas permitido (tocá el candado o los ajustes del navegador junto a la dirección → Cámara → Permitir y volvé a tocar ESCANEAR)'+(fr?', o que la app esté abierta dentro de otra página (como Claude), que bloquea la cámara: abrila en su propia pestaña.':'.')+' Mientras tanto podés escribir el código abajo.';
+ if(n==='NotFoundError'||n==='OverconstrainedError')return 'Este dispositivo no tiene una cámara disponible. Escribí el código abajo.';
+ if(n==='NotReadableError')return 'La cámara está siendo usada por otra aplicación. Cerrala y probá de nuevo, o escribí el código abajo.';
+ return (e&&e.message?e.message:'No se pudo usar la cámara.')+' Podés escribir el código abajo.'}
+
+// Stock: movimientos, alertas y mercadería recibida con productos. El stock SOLO cambia por acciones registradas (no hay ventas conectadas).
+const stockState=p=>{const s=Number(p.stock)||0,m=Number(p.min)||0;return s<=0?'sin':(m>0&&s<=m?'bajo':'ok')};
+const stockAlerts=()=>db.prod.filter(p=>stockState(p)!=='ok');
+const stockTag=p=>{const s=stockState(p);return s==='sin'?'<span class="tag" style="background:var(--warn);color:#fff">🔴 Sin stock</span>':s==='bajo'?'<span class="tag" style="background:var(--y)">⚠️ Stock bajo</span>':''};
+function stockMove(p,ns,motivo,prov){const before=Number(p.stock)||0;ns=Number(ns)||0;const mov=ns-before;if(!mov)return;p.smov=p.smov||[];p.smov.unshift({d:iso(),h:hm(),u:me.name,uid:me.id,before,mov,after:ns,motivo,prov:prov||''});p.smov=p.smov.slice(0,200);p.stock=ns;log('Modificó stock',p.name+' · Movimiento: '+(mov>0?'+':'')+mov+' · Motivo: '+motivo+(prov?' · Proveedor: '+prov:''),before,ns);save();notifyStock(p,before,ns)}
+const stockHist=p=>`<h2 style="font-size:18px;margin-top:16px">Historial de movimientos de stock</h2>${(p.smov||[]).slice(0,10).map(m=>`<div class="mut">${fd(m.d)} ${m.h} · ${esc(m.u)} · ${m.before} → ${m.after} (${m.mov>0?'+':''}${m.mov}) · ${esc(m.motivo)}${m.prov?' · '+esc(m.prov):''}</div>`).join('')||'<div class="mut">Sin movimientos.</div>'}<button class="btn s" style="margin-top:10px" onclick="salidaForm(${p.id})">📤 REGISTRAR SALIDA</button>`;
+function salidaForm(id){const p=db.prod.find(x=>x.id===id);sheet(`<h2>📤 Salida de stock</h2><div class="card"><b>${esc(p.name)}</b><div class="mut">Stock actual: ${p.stock}</div></div><label>Cantidad que sale</label><input id="sq" class="bigin" type="number" inputmode="numeric" min="1"><label>Motivo</label><select id="sm">${['Merma','Rotura','Consumo interno','Vencido','Otro'].map(x=>`<option>${x}</option>`).join('')}</select><p class="mut">Se registra a mano. Todavía no hay un sistema de ventas conectado: el stock no baja solo.</p><button class="btn" onclick="saveSalida(${id})">Registrar salida</button><button class="btn s" onclick="editProd(${id})">Volver</button>`)}
+function saveSalida(id){const p=db.prod.find(x=>x.id===id),q=Math.floor(Number($('#sq').value));if(!(q>0))return toast('Escribí la cantidad');if(q>p.stock)return toast('No hay tanto stock. Stock actual: '+p.stock);stockMove(p,p.stock-q,'Salida: '+$('#sm').value);editProd(id)}
+const stockCard=p=>{const s=stockState(p);return `<div class="card" style="border-left:6px solid ${s==='sin'?'var(--warn)':'var(--y)'}"><div class="big">${s==='sin'?'🔴 SIN STOCK':'⚠️ STOCK BAJO'}</div><div class="row" style="margin-top:8px">${pimgH(p)}<div class="grow"><div class="big">${esc(p.name)}</div><div class="mut">${s==='sin'?'No quedan unidades.':'Quedan: '+p.stock+' unidades · mínimo '+p.min}</div></div></div>${s==='sin'?`<button class="btn" onclick="addToPed(${p.id})">→ AGREGAR A PEDIDO</button>`:`<button class="btn" onclick="editProd(${p.id})">→ REVISAR / REPONER</button>`}</div>`};
+let stab='sin';
+function stockPage(){const sin=db.prod.filter(p=>stockState(p)==='sin'),baj=db.prod.filter(p=>stockState(p)==='bajo'),l=stab==='sin'?sin:baj;
+ return `<h2>📦 Control de stock</h2><div class="tabs">${[['sin','🔴 Sin stock ('+sin.length+')'],['bajo','⚠️ Stock bajo ('+baj.length+')']].map(t=>`<button class="${stab===t[0]?'on':''}" onclick="stab='${t[0]}';render()">${t[1]}</button>`).join('')}</div>${l.map(stockCard).join('')||'<div class="empty">✅ No hay productos en esta lista.</div>'}`}
+function stockHome(){const sin=db.prod.filter(p=>stockState(p)==='sin').length,baj=db.prod.filter(p=>stockState(p)==='bajo').length;
+ if(!sin&&!baj)return `<div class="card ok-alert"><div style="font-size:30px">✅</div><div class="big">Stock en orden</div><div class="mut">No hay productos sin stock ni con stock bajo.</div></div>`;
+ return `<div class="card aum"><div class="ba-t" style="margin-bottom:6px">📦 CONTROL DE STOCK</div>${sin?`<button class="btn d" onclick="stab='sin';go('stock')">🔴 ${sin} PRODUCTO${sin>1?'S':''} SIN STOCK</button>`:''}${baj?`<button class="btn" style="background:var(--y);color:#000" onclick="stab='bajo';go('stock')">⚠️ ${baj} PRODUCTO${baj>1?'S':''} CON STOCK BAJO</button>`:''}</div>`}
+function addToPed(id){const p=db.prod.find(x=>x.id===id);editCol('ped',0,{sup:p.sup||'',note:'Reponer: '+p.name})}
+// ----- Mercadería recibida con productos (suma stock automáticamente) -----
+let MI=[];
+const mItem=(i,it)=>{const p=db.prod.find(x=>x.id===it.pid);return `<div class="card"><div class="row">${pimgH(p)}<div class="grow"><div class="big">${esc(p.name)}</div><div class="mut">Stock actual: ${p.stock} → nuevo: <b>${(Number(p.stock)||0)+it.qty}</b></div></div><button class="ib" style="background:var(--p1);color:var(--ink)" onclick="mDel(${i})" aria-label="Quitar">✕</button></div><label>Cantidad recibida</label><input class="bigin" type="number" inputmode="numeric" min="1" value="${it.qty}" onchange="mQty(${i},this.value)"><label>Fecha de vencimiento (opcional: la app avisa)</label><input type="date" value="${esc(it.venc||'')}" onchange="mVenc(${i},this.value)"><label>📷 Foto del producto (opcional)</label><input type="file" accept="image/*" onchange="mImg(${i},this)"></div>`};
+const mRender=()=>{const e=$('#mit');if(e)e.innerHTML=MI.map((it,i)=>mItem(i,it)).join('')||'<div class="mut">Todavía no agregaste productos.</div>'};
+function mQty(i,v){MI[i].qty=Math.max(1,Math.floor(Number(v))||1);mRender()}
+function mDel(i){MI.splice(i,1);mRender()}
+function mVenc(i,v){if(MI[i])MI[i].venc=v||''}
+function mImg(i,inp){const f=inp.files&&inp.files[0],it=MI[i];if(!f||!it)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=120;const x=c.getContext('2d'),s=Math.min(im.width,im.height);x.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,120,120);const p=db.prod.find(y=>y.id===it.pid);if(p){p.img=c.toDataURL('image/jpeg',.7);log('Agregó foto al producto',p.name);save();mRender()}};im.src=r.result};r.readAsDataURL(f)}
+// Producto que todavía no existe: se crea en el momento (nombre + código escaneado) y se suma a lo recibido.
+let MCODE='';
+function mNew(){const name=String(($('#mnn')||{}).value||'').trim();if(!name)return toast('Escribí el nombre del producto');const code=MCODE;if(code&&findByCode(code))return toast('Ese código ya está cargado en otro producto.');
+ const se=$('#f_sup'),sup=se&&se.value&&se.value!=='__new__'?se.value:'';
+ const p={id:nid(),hist:[],smov:[],name,barcode:code,cat:'',sup,price:0,unit:'',disc:0,stock:0,min:0,venc:'',emoji:emojiFor(name)};db.prod.push(p);log('Agregó producto',name,null,'creado al registrar mercadería recibida');save();MCODE='';toast('Producto creado. Completá el precio después en Productos.');mAdd(p.id)}
+function mAdd(pid){const e=MI.find(x=>x.pid===pid);if(e)e.qty++;else MI.push({pid,qty:1});const r=$('#mres');if(r)r.innerHTML='';const s=$('#mq');if(s)s.value='';mRender()}
+function mSearch(){const t=$('#mq').value.trim().toLowerCase(),r=$('#mres');if(!t){r.innerHTML='';return}MCODE=/^\d{6,}$/.test(t)?t:'';
+ r.innerHTML=db.prod.filter(p=>[p.name,p.brand].some(x=>String(x||'').toLowerCase().includes(t))||String(p.barcode||'').includes(t)).slice(0,5).map(p=>`<button class="card t" onclick="mAdd(${p.id})">${esc(p.emoji||'')} ${esc(p.name)} <span class="mut">· stock ${p.stock}</span></button>`).join('')||`<div class="card"><div class="mut">No está cargado${MCODE?' (código '+esc(MCODE)+')':''}. Podés crearlo ahora:</div><input id="mnn" class="bigin" placeholder="Nombre del producto nuevo" value="${MCODE?'':esc($('#mq').value.trim())}"><button class="btn s" onclick="mNew()">➕ CREAR Y AGREGAR</button></div>`}
+function mScan(){scanBarcode(code=>{const p=findByCode(code);if(p)mAdd(p.id);else{const q=$('#mq');if(q)q.value=code;mSearch();toast('El código '+code+' no está cargado: podés crearlo abajo.')}})}
+function mercForm(id){ED=!!id;const x=id?db.merc.find(m=>m.id===id):{date:iso(),ped:0};const pend=!!id&&!(x.items&&x.items.length);if(!id||pend)MI=[];
+ const ro=x.items&&x.items.length?`<label>Productos recibidos</label>${x.items.map(i=>`<div class="mut">${esc(i.name)} · +${i.qty} (stock ${i.before} → ${i.after})${i.venc?' · vence '+fd(i.venc):''}</div>`).join('')}<p class="mut">Editar o eliminar esta recepción no cambia el stock. Para corregirlo, ajustá el stock del producto (queda registrado).</p>`:'';
+ sheet(`<h2>📦 ${id?'Mercadería recibida':'Registrar mercadería'}</h2>${field(['sup','Proveedor','sup'],x.sup||'')}${field(['ped','Pedido relacionado (opcional)','pedsel'],x.ped||0)}${field(['date','Fecha','date'],x.date||iso())}${field(['amt','Importe recibido','num'],x.amt||'')}${id&&!pend?ro:`<label>${pend?'¿Qué llegó? Cargá cada producto':'Productos recibidos'}</label><p class="mut">Buscá o escaneá cada producto y poné la cantidad. Se suma al stock y, si tiene vencimiento, la app avisa.</p><div class="row"><input id="mq" class="bigin grow" placeholder="🔍 Buscar producto o código" oninput="mSearch()"><button class="ib" style="min-height:56px;width:56px" onclick="mScan()" aria-label="Escanear">📷</button></div><div id="mres"></div><div id="mit"></div>`}${field(['note','Notas','area'],x.note||'')}<button class="btn" onclick="saveMerc(${id||0})">Guardar</button>${id&&can('del')?`<button class="btn d" onclick="delCol('merc',${id})">🗑️ ELIMINAR</button>`:''}${id&&!can('del')?'<button class="btn s" onclick="reqSheet(\'del\')">🔒 SOLICITAR PERMISO para eliminar</button>':''}<button class="btn s" onclick="closeSheet()">Cancelar</button>`);if(!id||pend)mRender()}
+function mApply(sup){return MI.map(it=>{const p=db.prod.find(y=>y.id===it.pid),before=Number(p.stock)||0;stockMove(p,before+it.qty,'Mercadería recibida',sup);
+  if(it.venc){lotOwn(p).push({id:nid(),venc:it.venc,qty:it.qty,note:'Recepción '+sup,u:me.name,d:iso()});syncVenc(p);log('Agregó vencimiento',p.name,null,fd(it.venc)+' · '+it.qty+' u. (mercadería recibida)')}
+  return {pid:p.id,name:p.name,qty:it.qty,before,after:p.stock,venc:it.venc||''}})}
+function saveMerc(id){const sup=supName('sup'),date=$('#f_date').value,amt=Number($('#f_amt').value||0),note=$('#f_note').value.trim(),ped=Number($('#f_ped').value)||0;
+ if(!sup)return toast('Elegí o escribí el proveedor');
+ if(id){const x=db.merc.find(m=>m.id===id),old=x.date;if(date&&date!==old&&!can('date'))return toast('Solo la administradora puede cambiar la fecha.');
+  log('Modificó mercadería recibida',sup,x.sup+' · '+money(x.amt)+' · '+(x.note||''),sup+' · '+money(amt)+' · '+note);
+  if(date&&date!==old){if(!me.admin)useGrant('date');log('Cambió fecha manualmente',sup,fd(old),fd(date));x.date=date}
+  x.sup=sup;x.amt=amt;x.note=note;
+  if(!(x.items&&x.items.length)&&MI.length){x.items=mApply(sup);log('Cargó qué llegó',sup+' · '+x.items.map(i=>i.name+' +'+i.qty).join(', '));Remote.notify('mercaderia','📦 MERCADERÍA RECIBIDA',sup+' · '+x.items.length+' producto'+(x.items.length>1?'s':''),'merc')}
+  MI=[];save();return closeSheet()}
+ const items=mApply(sup);
+ db.merc.push({id:nid(),sup,ped,date:date||iso(),amt,note,items,u:me.name,h:hm()});
+ log('Registró mercadería recibida',sup+' — '+money(amt)+(items.length?' · '+items.map(i=>i.name+' +'+i.qty).join(', '):''));
+ if(ped){const o=db.ped.find(y=>y.id===ped);if(o&&o.st!=='Recibido'){o.st='Recibido';log('Marcó pedido como recibido',o.sup+' — '+money(o.amt))}}
+ MI=[];save();Remote.notify('mercaderia','📦 MERCADERÍA RECIBIDA',sup+(items.length?' · '+items.length+' producto'+(items.length>1?'s':''):''),'merc');closeSheet()}
+// ----- Pedidos próximos a llegar -----
+const tomorrow=()=>{const d=new Date();d.setDate(d.getDate()+1);return iso(d)};
+const pedAlerts=()=>{const t=iso(),m=tomorrow(),L=db.ped.filter(x=>x.st!=='Recibido');return {hoy:L.filter(x=>x.date===t),man:L.filter(x=>x.date===m)}};
+const pedCard=(tt,L)=>L.length?`<button class="card t" onclick="go('ped')"><div class="big">📦 ${tt}</div><div class="mut">${L.length} pedido${L.length>1?'s':''} previsto${L.length>1?'s':''}</div>${L.map(x=>`<div>• ${esc(x.sup)} <span class="mut">${money(x.amt)}</span></div>`).join('')}</button>`:'';
+function pedHome(){const a=pedAlerts();return pedCard('PEDIDOS QUE LLEGAN HOY',a.hoy)+pedCard('PEDIDOS QUE LLEGAN MAÑANA',a.man)}
+function notifyStock(p,b,a){if(!Remote.on)return;const m=Number(p.min)||0;
+ if(a<=0&&b>0)Remote.notify('sin_stock','🔴 STOCK AGOTADO',p.name+' llegó a 0 unidades.','stock');
+ else if(m>0&&a<=m&&b>m&&a>0)Remote.notify('stock_bajo','⚠️ STOCK BAJO',p.name+': quedan '+a+' unidades.','stock')}
+
+// Usuarios: se registran solos y aparecen acá (no hay nadie escrito en el código). Solo la administradora los gestiona.
+const uName=u=>u.name+(u.last?' '+u.last:'');
+const sessOn=u=>Remote.on?!!(u.lastSeen&&Date.now()-Date.parse(u.lastSeen)<150000):loadSess().some(x=>x.uid===u.id&&x.on);
+function usersPage(){if(!can('users'))return '<div class="empty">Solo la administradora puede administrar usuarios.</div>';
+ return `<h2>👥 Usuarios</h2><p class="sub">Cada persona se registra con CREAR MI USUARIO y aparece acá automáticamente.</p>${db.users.map(u=>`<button class="card t" onclick="editUser('${u.id}')"><div class="row"><div class="pimg" style="border-radius:50%">${avatar(u)}</div><div class="grow"><div class="big">${esc(uName(u))}</div><div class="mut">${u.admin?'Administradora principal':'Usuario registrado'} · @${esc(u.id)}</div><div class="mut">${esc(u.email)}</div><div class="mut">Último acceso: ${u.lastAccess?fd(u.lastAccess.d)+' '+u.lastAccess.h:'—'} · ${sessOn(u)?'🟢 Sesión activa':'⚪ Sin sesión'} · ${u.on?'Activa':'Desactivada'}</div></div></div></button>`).join('')||'<div class="empty">Todavía no hay usuarios registrados.</div>'}`}
+function perms(){return `<div class="card" style="margin-top:14px"><div class="big">🛡️ Permisos</div><b>Todas las usuarias pueden:</b><div class="mut">✓ Productos, precios y stock · vencimientos · aumentos del día · proveedores, pedidos y mercadería · pagos diarios y notas · eliminar y restaurar registros operativos · corregir fechas</div><br><b>Solo la administradora:</b><div class="mut">🔒 Gestionar, activar, desactivar y eliminar usuarios · permisos · sesiones activas · eliminar definitivamente de la papelera · configuración de seguridad</div></div>`}
+function editUser(id){if(!can('users'))return;const u=db.users.find(x=>x.id===id);if(!u)return;
+ sheet(`<h2>${esc(uName(u))}</h2><div class="card"><div class="mut">Correo</div><b>${esc(u.email)}</b><div class="mut" style="margin-top:6px">Usuario</div><b>@${esc(u.id)}</b><div class="mut" style="margin-top:6px">Rol</div><b>${u.admin?'Administradora principal':'Usuario registrado'}</b></div><label>Estado de la cuenta</label><select id="us" ${u.admin?'disabled':''}><option value="1" ${u.on?'selected':''}>Activa</option><option value="0" ${u.on?'':'selected'}>Desactivada</option></select><p class="mut">El nombre y la foto personales solo los cambia cada persona.</p><button class="btn" onclick="saveUser('${id}')">Guardar</button>${u.admin?'':(Remote.on?'<p class="mut">Para borrar una cuenta para siempre, hacelo en Supabase → Authentication. Desactivala para bloquear su ingreso.</p>':`<button class="btn d" onclick="delUser('${id}')">🗑️ ELIMINAR USUARIO</button>`)}<button class="btn s" onclick="closeSheet()">Volver</button>`)}
+function saveUser(id){if(!can('users'))return;const u=db.users.find(x=>x.id===id);if(!u||u.admin)return closeSheet();const on=$('#us').value==='1';
+ if(!!u.on!==on){log(on?'Activó usuario':'Desactivó usuario',uName(u),u.on?'Activa':'Desactivada',on?'Activa':'Desactivada');u.on=on?1:0;if(Remote.on)Remote.setActive(u);if(!on)endUserSess(u.id)}save();closeSheet()}
+function delUser(id){if(!can('users'))return;if(Remote.on)return toast('La eliminación definitiva de cuentas se hace en Supabase → Authentication. Desactivala para bloquear su ingreso.');const u=db.users.find(x=>x.id===id);if(!u||u.admin)return;ask('¿Eliminar a '+uName(u)+'? Va a la papelera y se cierran sus sesiones.',()=>{endUserSess(id);softDelete('users',id);closeSheet()})}
+function lastAct(t){const d=new Date(t),h=d.toTimeString().slice(0,5);return iso(d)===iso()?'hoy '+h:fd(iso(d))+' '+h}
+async function sesSheet(){if(!can('sessions'))return;const all=Remote.on?await Remote.sessions():loadSess();const s=all.filter(x=>x.on||Date.now()-x.last<864e5).slice(0,20);
+ sheet(`<h2>🔐 Sesiones activas</h2>${Remote.on?'':'<p class="mut">Modo local: solo se ven las sesiones de este navegador.</p>'}${s.map(x=>`<div class="card"><b>${esc(x.name)}</b><div class="mut">${esc(x.dev)} · Ingresó: ${lastAct(x.start)} · Último acceso: ${lastAct(x.last)}</div><div class="big">${x.on?'🟢 ACTIVA':'⚪ CERRADA'}</div>${x.on&&x.id!==sid?`<button class="btn d" onclick="killSess('${x.id}')">CERRAR SESIÓN</button>`:x.id===sid?'<div class="mut">Esta es tu sesión</div>':''}</div>`).join('')||'<div class="empty">No hay sesiones.</div>'}<button class="btn s" onclick="closeSheet()">Volver</button>`)}
+function killSess(id){if(!can('sessions'))return;const m=(Remote.on?Remote.lastSess:loadSess()).find(x=>x.id===id);if(m)log('Cerró la sesión de otro usuario',m.name+' ('+m.dev+')');
+ if(Remote.on)return Remote.endSession(id).then(()=>sesSheet());endSess(id);sesSheet()}
+
+// Perfil: cada persona edita SOLO su propia foto y nombre.
+let newAv=null;
+function pav(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=160;const x=c.getContext('2d');const s=Math.min(im.width,im.height);x.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,160,160);newAv=c.toDataURL('image/jpeg',.75);$('#pv').innerHTML=`<img src="${newAv}" alt="">`};im.src=r.result};r.readAsDataURL(f)}
+function perfilPage(){const P=[['Productos, precios y stock',1],['Vencimientos y aumentos del día',1],['Proveedores, pedidos y mercadería',1],['Pagos diarios y notas',1],['Eliminar y restaurar registros operativos',1],['Administrar usuarios y permisos',!!me.admin],['Eliminar definitivamente (papelera)',!!me.admin]];
+ return `<h2>👤 Perfil</h2><div class="card"><div class="pimg xl" id="pv">${avatar(me)}</div><div class="big" style="text-align:center">${esc(uName(me))}</div><div class="mut" style="text-align:center">@${esc(me.id)} · ${me.admin?'Administradora principal':'Usuario registrado'}</div><div class="mut" style="text-align:center">${esc(me.email)}</div></div><div class="card"><label>📷 Mi foto personal</label><input type="file" accept="image/*" onchange="pav(this)"><label>Nombre</label><input id="pn" value="${esc(me.name)}"><label>Apellido</label><input id="pl" value="${esc(me.last||'')}"><p class="mut">Solo vos podés cambiar tu foto y tus datos personales.</p><button class="btn" onclick="saveMe()">Guardar cambios</button></div><div class="card"><b>Permisos</b>${P.map(p=>`<div>${p[1]?'✅':'🔒'} ${p[0]}</div>`).join('')}</div><button class="btn d" onclick="logout()">🚪 CERRAR SESIÓN</button>`}
+function saveMe(){const n=$('#pn').value.trim(),l=$('#pl').value.trim();if(!n)return toast('Escribí tu nombre');const o=uName(me);me.name=n;me.last=l;if(uName(me)!==o)log('Modificó su nombre',o+' → '+uName(me));if(newAv){me.photo=newAv;log('Cambió su foto de perfil',uName(me));newAv=null}if(Remote.on)Remote.saveProfile().then(ok=>{if(ok)toast('Cambios guardados')});save();render()}
+
+const sumA=a=>a.reduce((s,x)=>s+Number(x.amt||0),0);
+function jornada(){const t=iso(),g=k=>db[k].filter(x=>x.date===t);
+ const R=[['📦','Mercadería recibida',g('merc').length+' registros · '+money(sumA(g('merc'))),'merc'],['🚚','Proveedores',db.sup.length+' cargados','sup'],['📋','Pedidos',db.ped.filter(x=>x.st!=='Recibido').length+' pendientes','ped'],['💳','Pagos diarios',money(sumA(g('pagos'))),'pagos'],['📈','Cambios de precios',todayPrice().length+' hoy','alert'],['📝','Notas',g('notas').length+' hoy','notas']];
+ const closed=db.log.some(l=>l.d===t&&l.act==='Cerró la jornada');
+ return `<h2>📅 Jornada diaria</h2><p class="sub">${fd(t)}</p>${R.map(r=>`<button class="card t" onclick="go('${r[3]}')"><div class="row"><div style="font-size:26px">${r[0]}</div><div class="grow"><div class="big">${r[1]}</div><div class="mut">${r[2]}</div></div>›</div></button>`).join('')}<div class="card" style="background:var(--p1)"><b>Cerrá el día cuando termines</b><div class="mut">Todo queda guardado en la memoria de este día.</div></div><button class="btn" onclick="cerrar()">${closed?'Jornada cerrada ✓ · cerrar de nuevo':'Cerrar jornada'}</button><h2>Movimientos de hoy</h2>${db.log.filter(l=>l.d===t&&!SESION.includes(l.act)).map(l=>`<div class="card hist"><b>${esc(l.u)}</b> ${esc(l.act.toLowerCase())}: ${esc(l.detail)}<div class="mut">${l.h}</div></div>`).join('')||'<div class="empty">Todavía no hay movimientos hoy.</div>'}`}
+function cerrar(){const t=iso(),g=k=>db[k].filter(x=>x.date===t);log('Cerró la jornada',fd(t),null,`Recibido ${money(sumA(g('merc')))} · Pagos diarios ${money(sumA(g('pagos')))} · ${todayPrice().length} cambios de precio`);toast('Jornada cerrada. Quedó guardada en el historial.');render()}
+function bnav(){const n=todayPrice().length+soon().length+stockAlerts().length+pedAlerts().hoy.length+pedAlerts().man.length;return `<nav class="bnav"><button class="${view==='home'?'on':''}" onclick="go('home')"><span>🏠</span>Inicio</button><button onclick="menuOpen=true;render()"><span>▦</span>Menú</button><button class="plus" onclick="quick()" aria-label="Agregar">+</button><button class="${view==='alert'?'on':''}" onclick="go('alert')"><span>🔔${n?'<sup style="color:var(--warn)">'+n+'</sup>':''}</span>Alertas</button><button onclick="go('perfil')"><span>👤</span>Perfil</button></nav>`}
+function quick(){sheet(`<h2>Agregar rápido</h2>${[['🏷️ Producto',"editProd(0)"],['📦 Mercadería recibida',"editCol('merc',0)"],['💳 Pago diario',"editCol('pagos',0)"],['📝 Nota',"editCol('notas',0)"],['📋 Pedido',"editCol('ped',0)"]].map(b=>`<button class="btn s" onclick="${b[1]}">${b[0]}</button>`).join('')}<button class="btn" onclick="closeSheet()">Cancelar</button>`)}
+
+function notify(t){try{if(!db.cfg.notif||!db.cfg.notifAum)return;if(!('Notification' in window))return;if(Notification.permission==='granted')new Notification('Lucerito · Aumento',{body:t})}catch(e){}}
+function askNotif(){try{Notification.requestPermission().then(()=>cfgOpen('notif'))}catch(e){toast('Este navegador no permite notificaciones.')}}
+const CFGI=[['perfil','👤','Mi perfil'],['notif','🔔','Notificaciones'],['venc','⏰','Alertas de vencimiento'],['aum','📈','Alertas de aumentos'],['perms','🔐','Permisos'],['solic','🙋','Solicitar permisos'],['users','👥','Usuarios'],['ses','🔐','Sesiones activas'],['fecha','📅','Fecha y configuración'],['gen','⚙️','Configuración general']];
+function cfgPage(){const pend=db.reqs.filter(r=>r.st==='Pendiente').length;return `<h2>⚙️ Configuración</h2>${CFGI.filter(c=>!['users','ses','gen'].includes(c[0])||me.admin).map(c=>`<button class="card t" onclick="cfgOpen('${c[0]}')"><div class="row"><div style="font-size:26px">${c[1]}</div><div class="grow big">${c[2]}${c[0]==='solic'&&me.admin&&pend?` <span class="tag" style="background:var(--warn);color:#fff">${pend}</span>`:''}</div>›</div></button>`).join('')}`}
+function cfgOpen(k){
+ if(k==='perfil')return go('perfil');
+ if(k==='ses')return sesSheet();
+ if(k==='users')return go('users');
+ if(k==='solic')return reqSheet();
+ const B='<button class="btn s" onclick="closeSheet()">Volver</button>';
+ if(k==='perms')return sheet(`<h2>🔐 Permisos</h2>${perms()}${B}`);
+ if(k==='notif')return notifSheet();
+ if(k==='aum')return sheet(`<h2>📈 Alertas de aumentos</h2>${chkbox(db.cfg.notifAum,'db.cfg.notifAum=this.checked;save()','Avisar cuando un producto aumenta')}<p class="mut">Los aumentos siempre aparecen en Inicio y en el historial.</p>${B}`);
+ if(k==='venc')return sheet(`<h2>⏰ Alertas de vencimiento</h2><label>Avisar y sugerir oferta cuando falten (días)</label><input id="od" type="number" min="1" value="${db.cfg.offerDays}" ${me.admin?'':'disabled'}>${me.admin?'<button class="btn" onclick="setOD()">Guardar</button>':'<p class="mut">Solo la administradora puede cambiarlo.</p>'}${B}`);
+ if(k==='fecha')return sheet(`<h2>📅 Fecha y configuración</h2><div class="card">Hoy es <b>${fd(iso())}</b> (automática del sistema).</div><p class="mut">Podés corregir la fecha de un registro cuando haga falta. Se anota la fecha original, la nueva, quién y cuándo.</p>${B}`);
+ if(k==='gen'){const R=statusRows();
+  return sheet(`<h2>⚙️ Configuración general</h2><h2 style="font-size:18px">Estado real de la app</h2>${R.map(r=>`<div class="card"><b>${r[0]} ${r[1]}</b><div class="mut">${r[2]}</div></div>`).join('')}${me.admin?chkbox(db.cfg.approve,'db.cfg.approve=this.checked;save()','Las cuentas nuevas necesitan aprobación de la administradora'):''}${me.admin?'<button class="btn d" onclick="resetAll()">Borrar datos de prueba</button>':''}${B}`)}
+}
+function setOD(){const n=Math.round(Number($('#od').value));if(!(n>=1))return toast('Escribí un número de días');log('Modificó alerta de vencimiento','Días de aviso',db.cfg.offerDays+' días',n+' días');db.cfg.offerDays=n;save();closeSheet()}
+function resetAll(){ask('Se borran TODOS los datos de este dispositivo. ¿Seguro?',()=>{try{localStorage.removeItem(KEY);localStorage.removeItem(SKEY);localStorage.removeItem(KEY+'_session')}catch(e){}location.reload()},'Sí, borrar todo')}
+function reqSheet(pre){const mine=db.reqs.filter(r=>me.admin||r.uid===me.id).slice(0,20);
+ sheet(`<h2>🙋 Solicitar permisos</h2>${me.admin?'':`<label>¿Qué necesitás hacer?</label><select id="rq">${RQ_OPT.map(k=>[k,RQ[k]]).map(e=>`<option value="${e[0]}" ${e[0]===pre?'selected':''}>${e[1]}</option>`).join('')}</select><label>Detalle</label><textarea id="rn" rows="2" placeholder="Ej: necesito administrar una cuenta"></textarea><button class="btn" onclick="sendReq()">Enviar solicitud a la administradora</button>`}<h2>${me.admin?'Solicitudes':'Mis solicitudes'}</h2>${mine.map(r=>`<div class="card"><b>${esc(r.u)}</b> solicita permiso para: ${esc(RQ[r.k]||r.k)}<div class="mut">${esc(r.note||'')} · ${fd(r.d)} ${r.h}</div><div class="big">${r.st==='Pendiente'?'🟡 Pendiente':r.st==='Aprobada'?'✅ Aprobada':'❌ Rechazada'}</div>${me.admin&&r.st==='Pendiente'?`<button class="btn" onclick="resReq(${r.id},1)">✅ Aprobar</button><button class="btn d" onclick="resReq(${r.id},0)">❌ Rechazar</button>`:''}</div>`).join('')||'<div class="empty">No hay solicitudes.</div>'}<button class="btn s" onclick="closeSheet()">Volver</button>`)}
+function sendReq(){const k=$('#rq').value;db.reqs.unshift({id:nid(),uid:me.id,u:me.name,k,note:$('#rn').value.trim(),d:iso(),h:hm(),st:'Pendiente'});log('Solicitó permiso',RQ[k]||k);reqSheet()}
+function resReq(id,ok){if(!me.admin)return;const r=db.reqs.find(x=>x.id===id),u=db.users.find(x=>x.id===r.uid);r.st=ok?'Aprobada':'Rechazada';r.by=me.name;if(ok&&u&&r.k!=='otro'){u.grants=u.grants||{};u.grants[r.k]=(u.grants[r.k]||0)+1}log((ok?'Aprobó':'Rechazó')+' solicitud de permiso',r.u+': '+(RQ[r.k]||r.k));reqSheet()}
+const NT=[['vencimientos','Vencimientos'],['stock_bajo','Stock bajo'],['sin_stock','Sin stock'],['aumentos','Aumentos'],['pedidos','Pedidos'],['mercaderia','Mercadería recibida'],['otros','Otros avisos importantes']];
+function notifSheet(){const B='<button class="btn s" onclick="closeSheet()">Volver</button>';
+ if(!Remote.on)return sheet(`<h2>🔔 Notificaciones</h2><p class="lmsg">Modo local: las notificaciones push reales necesitan que la app esté conectada a Supabase y a Firebase (ver README). Mientras tanto solo avisan con la app abierta.</p>${chkbox(db.cfg.notif,'db.cfg.notif=this.checked;save()','Avisarme en este dispositivo (app abierta)')}<button class="btn" onclick="askNotif()">Permitir notificaciones del navegador</button>${B}`);
+ const perm=typeof Notification!=='undefined'?Notification.permission:'no disponible',pr=me.prefs||{};
+ return sheet(`<h2>🔔 Notificaciones</h2>${Push.configured()?'':'<p class="lmsg">Falta configurar Firebase (variables FIREBASE_*) para activar las notificaciones push. Ver README.</p>'}<p>Permiso de este dispositivo: <b>${perm}</b></p><button class="btn" onclick="pushOn()">Activar en este dispositivo</button><button class="btn s" onclick="pushOff()">Desactivar en este dispositivo</button><label>Quiero recibir avisos de:</label>${NT.map(n=>chkbox(pr[n[0]]!==false,`setPref('${n[0]}',this.checked)`,n[1])).join('')}<p class="mut">Estas preferencias son solo tuyas y se guardan en tu cuenta.</p>${B}`)}
+async function pushOn(){try{await Push.enable();toast('Notificaciones activadas en este dispositivo.')}catch(e){toast(e.message)}notifSheet()}
+async function pushOff(){await Push.disable();toast('Notificaciones desactivadas en este dispositivo.');notifSheet()}
+function setPref(k,v){me.prefs=Object.assign({},me.prefs,{[k]:v});Remote.saveProfile()}
+function statusRows(){
+ if(Remote.on)return [['✅','Conectada a Supabase','Los datos son centrales: todas las personas ven lo mismo y los cambios llegan en tiempo real'],['✅','Cuentas','Autenticación real de Supabase (correo + contraseña). El rol y el estado de cada cuenta los controla la base de datos'],['✅','Permisos','Reglas RLS en la base de datos: lo crítico (usuarios, papelera definitiva, configuración) solo lo hace la administradora'],['✅','Historial','Se guarda en el servidor y no se puede modificar ni borrar desde la app'],['⚠️','Recuperar contraseña','Se envía un enlace por correo con el servicio de correo (SMTP) configurado en Supabase'],[Push.configured()?'✅':'⚠️','Notificaciones push',Push.configured()?'Firebase configurado en esta versión. Los envíos los hace el servidor (api/notify y api/cron-alerts)':'Falta configurar Firebase (variables FIREBASE_*)'],['⚠️','Sesiones','Se cierran a nivel de la app. Para invalidar el acceso por completo, desactivá la cuenta'],['ℹ️','Tipos de acceso','El código (GitHub), el Artifact de Claude, la app Lucerito y los permisos internos son cosas distintas. Ver README']];
+ return [['⚠️','MODO LOCAL (sin servidor)','Los datos se guardan solo en este dispositivo y NO se comparten con otras personas. Para compartirlos hay que conectar Supabase (ver README)'],['✅','Pantallas y lógica','Productos, stock, pedidos, aumentos, papelera e historial funcionan'],['⚠️','Cuentas','Demostración local: no es autenticación real'],['⚠️','Permisos','Solo controlan la pantalla, sin servidor no son seguridad real'],['⚠️','Recuperar contraseña','Preparada con Supabase (enlace por correo). En modo local solo existe la prueba'],['⚠️','Notificaciones push','Necesitan Supabase + Firebase (ver README)'],['ℹ️','Tipos de acceso','El código (GitHub), el Artifact de Claude, la app Lucerito y los permisos internos son cosas distintas. Ver README']]}
+
+// Vencimientos por lote: un producto puede tener VARIAS fechas (distintos lotes). Se guardan dentro del producto (p.lots),
+// por eso no hace falta cambiar la base de datos. p.venc queda siempre con la fecha MÁS PRÓXIMA: así las alertas, Inicio y los avisos siguen igual.
+const lotList=p=>Array.isArray(p.lots)&&p.lots.length?p.lots:(p.venc?[{id:-1,venc:p.venc,qty:'',note:''}]:[]);
+function lotOwn(p){if(!Array.isArray(p.lots)||!p.lots.length)p.lots=p.venc?[{id:nid(),venc:p.venc,qty:'',note:''}]:[];return p.lots}
+const syncVenc=p=>{const l=Array.isArray(p.lots)?p.lots.filter(x=>x.venc).map(x=>x.venc).sort():[];p.venc=l.length?l[0]:''};
+const lotQty=l=>l.qty!==''&&l.qty!=null?' · '+l.qty+' u.':'';
+// El campo "Fecha de vencimiento" de la ficha del producto edita la fecha más próxima.
+function applyVencEdit(p,oldV,newV){oldV=oldV||'';newV=newV||'';if(oldV===newV)return;
+ const L=lotOwn(p),i=oldV?L.findIndex(x=>x.venc===oldV):-1;
+ if(!newV){if(i>=0)L.splice(i,1)}else if(i>=0)L[i].venc=newV;else L.push({id:nid(),venc:newV,qty:'',note:'',u:me.name,d:iso()});
+ syncVenc(p)}
+const vencRows=()=>db.prod.flatMap(p=>lotList(p).filter(l=>l.venc).map(l=>({p,l}))).sort((a,b)=>a.l.venc<b.l.venc?-1:a.l.venc>b.l.venc?1:0);
+const lotCard=(p,l)=>{const hasQ=l.qty!==''&&l.qty!=null;
+ return pcard(p,`<div class="mut">Vence: ${fd(l.venc)}</div><div class="mut">${hasQ?'Lote: '+esc(l.qty)+' unidades · Stock total: '+p.stock:'Quedan: '+p.stock+' unidades'}</div>${l.note?`<div class="mut">${esc(l.note)}</div>`:''}${bd({venc:l.venc})}`,'lotOpen').replace(`onclick="lotOpen(${p.id})"`,`onclick="lotSheet(${p.id},${l.id})"`)};
+function vencPage(){let r=vencRows();
+ if(vt==='por')r=r.filter(x=>{const d=days(x.l.venc);return d>=0&&d<=30});
+ if(vt==='venc')r=r.filter(x=>days(x.l.venc)<0);
+ return `<h2>⏰ Vencimientos</h2><div class="tabs">${[['todos','Todos'],['por','Por vencer'],['venc','Vencidos']].map(t=>`<button class="${vt===t[0]?'on':''}" onclick="vt='${t[0]}';render()">${t[1]}</button>`).join('')}</div><button class="btn" onclick="addVenc()">+ Agregar vencimiento</button>${r.map(x=>lotCard(x.p,x.l)).join('')||'<div class="empty">No hay vencimientos en esta lista.</div>'}`}
+let vpq='';
+const vpList=()=>db.prod.filter(p=>matchP(p,vpq)).map(p=>`<button class="card t" onclick="lotSheet(${p.id},0)">${esc(p.emoji||emojiFor(p.name))} ${esc(p.name)}</button>`).join('')||'<div class="empty">No hay productos con ese nombre. Cargalo primero en Productos.</div>';
+function addVenc(){vpq='';sheet(`<h2>Elegí el producto</h2><input class="bigin" id="vpq" placeholder="🔍 Buscar producto o código" oninput="vpq=this.value;$('#vpl').innerHTML=vpList()"><div id="vpl">${vpList()}</div><button class="btn s" onclick="closeSheet()">Cancelar</button>`)}
+function lotSheet(pid,lid){const p=db.prod.find(x=>x.id===pid);if(!p)return;
+ const l=lid?lotList(p).find(x=>x.id===lid):{venc:'',qty:'',note:''};if(!l)return;const d=l.venc?days(l.venc):null;
+ sheet(`<div class="row">${pimgH(p)}<div class="big">${esc(p.name)}</div></div><h2>${lid?'Editar vencimiento':'Nuevo vencimiento'}</h2>${lid&&l.venc?`<div class="card" style="background:${vstate(l).c};color:#fff;text-align:center;font-weight:bold">${d<0?'Vencido':d===0?'¡Vence hoy!':'Faltan '+d+' días'}</div>`:''}<label>Fecha de vencimiento</label><input id="lv_d" type="date" value="${esc(l.venc)}"><label>Cantidad de este lote (opcional)</label><input id="lv_q" type="number" inputmode="decimal" value="${esc(l.qty)}"><label>Nota o lote (opcional)</label><input id="lv_n" value="${esc(l.note||'')}"><button class="btn" onclick="saveLot(${pid},${lid},false)">GUARDAR</button>${lid?'':`<button class="btn s" onclick="saveLot(${pid},0,true)">GUARDAR Y AGREGAR OTRO</button>`}${lid&&p.venc?`<button class="btn s" onclick="openAlert(${pid})">🏷️ Oferta y seguimiento</button>`:''}${lid&&can('del')?`<button class="btn d" onclick="delLot(${pid},${lid})">🗑️ ELIMINAR VENCIMIENTO</button>`:''}${lid&&!can('del')?'<button class="btn s" onclick="reqSheet(\'del\')">🔒 SOLICITAR PERMISO para eliminar</button>':''}<button class="btn s" onclick="closeSheet()">Cancelar</button>`)}
+function saveLot(pid,lid,more){const p=db.prod.find(x=>x.id===pid);if(!p)return;
+ const v=$('#lv_d').value.trim(),qS=String($('#lv_q').value).trim(),n=$('#lv_n').value.trim();
+ if(!/^\d{4}-\d{2}-\d{2}$/.test(v))return toast('Elegí la fecha de vencimiento');
+ if(qS!==''&&!(Number(qS)>=0))return toast('La cantidad no es válida');
+ const q=qS===''?'':Number(qS),L=lotOwn(p);
+ if(lid){const l=lid===-1?L[0]:L.find(x=>x.id===lid);if(!l)return;const old=fd(l.venc)+lotQty(l);l.venc=v;l.qty=q;l.note=n;log('Modificó vencimiento',p.name,old,fd(v)+lotQty(l))}
+ else{L.push({id:nid(),venc:v,qty:q,note:n,u:me.name,d:iso()});log('Agregó vencimiento',p.name,null,fd(v)+(q!==''?' · '+q+' u.':''))}
+ syncVenc(p);save();
+ if(more){toast('Guardado. Podés cargar otro vencimiento de '+p.name);lotSheet(pid,0)}else closeSheet()}
+function delLot(pid,lid){const p=db.prod.find(x=>x.id===pid);if(!p)return;
+ ask('¿Eliminar este vencimiento? Queda en el historial.',()=>{const L=lotOwn(p),i=lid===-1?0:L.findIndex(x=>x.id===lid);if(i<0)return;const l=L.splice(i,1)[0];syncVenc(p);log('Eliminó vencimiento',p.name,fd(l.venc)+lotQty(l),null);save();closeSheet()})}
+
+// Pedidos: el estado cambia solo según la fecha de llegada (no hace falta tocar nada).
+// "Agregado" (anotado, todavía no llega) → "En camino" cuando llega la fecha de llegada → "Recibido" lo marcan ellas.
+// El estado automático se CALCULA al mostrar (no se guarda), así no se pisan los cambios entre usuarias.
+let ptab='pend',PENDM=0;
+const pedEff=x=>x.st==='Recibido'?'Recibido':x.st==='En camino'?'En camino':(x.date&&x.date<=iso()?'En camino':'Agregado');
+const pedBadge=x=>{const e=pedEff(x);return e==='Recibido'?'🟢 Recibido':e==='En camino'?'🟡 En camino':(x.cd===iso()?'🔵 Agregado hoy':'🔵 Agregado')};
+function pedTabs(){const n=db.ped.filter(x=>x.st!=='Recibido').length,m=db.ped.length-n;
+ return `<div class="tabs">${[['pend','Pendientes ('+n+')'],['rec','Recibidos ('+m+')']].map(t=>`<button class="${ptab===t[0]?'on':''}" onclick="ptab='${t[0]}';render()">${t[1]}</button>`).join('')}</div>${ptab==='rec'?'<div class="mut" style="margin-bottom:8px">Estos pedidos ya pasaron a Mercadería recibida.</div><button class="btn s" onclick="go(\'merc\')">Ver Mercadería recibida</button>':''}`}
+
+// Calculadora del día (en Pedidos). SUMA SOLA el importe de los pedidos que se anotaron ese día: no hay que cargar nada a mano.
+// Opcional: importes sueltos (tabla calc_entries), ligados a la fecha de la jornada, que se suman al total.
+const moneyC=n=>'$'+Number(n||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
+// Acepta formato argentino: 1500 · 1.500 · 1.500,50 · 1500,5
+const parseAR=s=>{s=String(s==null?'':s).replace(/[\s$]/g,'');if(!s)return NaN;if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');return /^\d+(\.\d+)?$/.test(s)?Math.round(Number(s)*100)/100:NaN};
+let calcDay=null;
+const calcDate=()=>calcDay||iso();
+const calcItems=()=>db.calc.filter(x=>x.date===calcDate()).sort((a,b)=>a.id-b.id);
+const calcExtras=()=>calcItems().reduce((s,x)=>s+Math.round(x.amt*100),0)/100;
+// Pedidos del día = los que se anotaron ese día (si es un pedido viejo sin fecha de alta, cuenta su fecha de llegada).
+const pedDay=x=>x.cd||x.date||'';
+const calcPeds=()=>db.ped.filter(x=>pedDay(x)===calcDate()).sort((a,b)=>a.id-b.id);
+const calcPedTotal=()=>calcPeds().reduce((s,x)=>s+Math.round(Number(x.amt||0)*100),0)/100;
+const calcTotal=()=>Math.round((calcPedTotal()+calcExtras())*100)/100;
+function calcCard(){const L=calcItems(),P=calcPeds(),d=calcDate(),X=db.ped.filter(x=>x.date===d);
+ const row=x=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--p1);cursor:pointer" onclick="editCol('ped',${x.id})"><div class="grow"><b>${esc(x.sup)}</b><div class="mut" style="font-size:12px">${esc(pedBadge(x))}${x.date?' · llega '+fd(x.date):''}</div></div><div class="big">${Number(x.amt)?moneyC(x.amt):'<span class="mut">sin importe</span>'}</div></div>`;
+ const miss=Remote.on&&Remote.missing&&Remote.missing.calc_entries;
+ return `<div class="card" id="calc"><div class="ba-t" style="margin-bottom:6px">🧮 CALCULADORA DEL DÍA</div>
+ <div class="row"><div class="grow"><div class="mut">${d===iso()?'Hoy':'Otro día'} — ${fd(d)}</div></div><input type="date" style="width:auto" value="${d}" onchange="calcDay=this.value||null;render()" aria-label="Día"></div>
+ <div style="text-align:center;padding:14px 0 10px"><div class="mut">TOTAL DEL DÍA</div><div class="big" style="font-size:38px" id="ctot">${moneyC(calcTotal())}</div><div class="mut">${P.length} ${P.length===1?'pedido anotado':'pedidos anotados'}${L.length?' + '+L.length+' importes sueltos':''}</div>${X.length?`<div class="mut" style="font-size:12px">Llegan este día: ${X.length} · ${moneyC(X.reduce((s,x)=>s+Math.round(Number(x.amt||0)*100),0)/100)}</div>`:''}</div>
+ ${P.map(row).join('')||'<div class="mut" style="margin:8px 0;text-align:center">Todavía no hay pedidos anotados este día.</div>'}
+ <div class="mut" style="margin-top:6px;font-size:12px">Se suma solo al agregar un pedido con su importe. Tocá un pedido para corregirlo.</div>
+ <details style="margin-top:12px"${L.length?' open':''}><summary class="mut" style="cursor:pointer">➕ Importes sueltos (opcional)</summary>
+ ${miss?'<div class="mut" style="margin:8px 0">⚠️ Para guardar importes sueltos la administradora debe ejecutar la migración db/migrations/001_calc_entries.sql en Supabase. Los pedidos se suman igual.</div>':''}
+ <div class="row" style="margin-top:8px"><input id="cin" class="bigin grow" inputmode="decimal" placeholder="Importe en $ (ej: 1500 o 1.500,50)" onkeydown="if(event.key==='Enter')calcAdd()"><button class="btn" style="width:auto;margin:0;min-width:96px" onclick="calcAdd()">+ SUMAR</button></div>${L.map((x,i)=>`<div class="row" style="padding:8px 0;border-top:1px solid var(--p1)"><div class="grow"><b>${i+1}. ${moneyC(x.amt)}</b><div class="mut" style="font-size:12px">${esc(x.h||'')} · ${esc(x.u||'')}</div></div><button class="btn s" style="width:auto;margin:0;min-height:44px" onclick="calcEdit(${x.id})" aria-label="Corregir importe">✏️</button><button class="btn s" style="width:auto;margin:0;min-height:44px" onclick="calcDel(${x.id})" aria-label="Eliminar importe">🗑️</button></div>`).join('')}${L.length?'<button class="btn d" onclick="calcClearAsk()">LIMPIAR IMPORTES SUELTOS</button>':''}</details></div>`}
+function calcAdd(){const e=$('#cin');if(!e)return;const a=parseAR(e.value);if(!(a>0))return toast('Escribí un importe válido en pesos');
+ db.calc.push({id:nid(),date:calcDate(),amt:a,u:me.name,h:hm()});log('Sumó un importe en la calculadora',moneyC(a),null,'Total del '+fd(calcDate())+': '+moneyC(calcTotal()));save();render();const n=$('#cin');if(n&&n.focus)n.focus()}
+function calcEdit(id){const x=db.calc.find(y=>y.id===id);if(!x)return;sheet(`<h2>🧮 Corregir importe</h2><label>Importe en $</label><input id="ce" class="bigin" inputmode="decimal" value="${String(x.amt).replace('.',',')}"><button class="btn" onclick="calcSaveEdit(${id})">GUARDAR</button><button class="btn s" onclick="closeSheet()">Cancelar</button>`)}
+function calcSaveEdit(id){const x=db.calc.find(y=>y.id===id),a=parseAR($('#ce').value);if(!x)return;if(!(a>0))return toast('Escribí un importe válido en pesos');
+ if(a!==x.amt){log('Corrigió un importe de la calculadora',fd(x.date),moneyC(x.amt),moneyC(a));x.amt=a;save()}closeSheet()}
+function calcDel(id){ask('¿Eliminar este importe? Va a la papelera y queda en el historial.',()=>{softDelete('calc',id);render()})}
+function calcClearAsk(){const L=calcItems();ask('¿Limpiar los importes sueltos del '+fd(calcDate())+'? Suman '+moneyC(calcExtras())+' en '+L.length+(L.length===1?' importe':' importes')+'. Se mueven a la papelera y se pueden restaurar.',calcClear,'Sí, limpiar y empezar de nuevo')}
+function calcClear(){const d=calcDate(),L=calcItems();if(!L.length)return;const tot=calcExtras();
+ L.forEach(r=>{db.calc=db.calc.filter(x=>x.id!==r.id);const t={tid:0,coll:'calc',rec:r,by:me.name,uid:me.id,d:iso(),h:hm()};t.tid=t.id=nid();db.trash.unshift(t)});
+ log('Reinició los importes sueltos de la calculadora',fd(d),moneyC(tot)+' en '+L.length+(L.length===1?' importe':' importes'),null);save();render()}
+
+Store.probe();
+const GO=(()=>{try{return new URLSearchParams(location.search).get('go')}catch(e){return null}})();
+if(Remote.on){render();Remote.init().then(()=>render())}else{restoreLocal();render()}
+if(typeof setInterval!=='undefined')setInterval(()=>{if(me&&!sessAlive())forceOut()},5000);
+// Si la app vuelve al primer plano y hay una sesión de Supabase guardada que todavía no entró (por ejemplo, falló la red al abrir), se reintenta sin pedir contraseña.
+if(typeof document!=='undefined'&&document.addEventListener)document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Remote.on&&Remote.ready&&!me&&!Remote.entering)Remote.afterAuth().then(ok=>{if(ok)render()}).catch(()=>{})});
+
+</script></body></html>
