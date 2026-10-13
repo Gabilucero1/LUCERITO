@@ -9,15 +9,15 @@ function field(f,v){const [k,l,t,o]=f;let h=`<label>${l}</label>`;
  if(t==='date'&&ED&&!can('date'))h+='<button type="button" class="btn s" onclick="reqSheet(\'date\')">🔒 SOLICITAR PERMISO para cambiar la fecha</button>';
  return h}
 const val=(f)=>{if(f[2]==='sup')return supName(f[0]);const e=$('#f_'+f[0]);return f[2]==='num'||f[2]==='pedsel'?Number(e.value||0):e.value.trim()};
-let ED=false;function editCol(k,id,pre){if(k==='merc')return mercForm(id);ED=!!id;const c=COL[k];const x=id?db[k].find(y=>y.id===id):{date:iso(),st:'En camino',met:'Efectivo',...(pre||{})};
+let ED=false;function editCol(k,id,pre){if(k==='merc')return mercForm(id);ED=!!id;const c=COL[k];const x=id?db[k].find(y=>y.id===id):{date:k==='ped'?'':iso(),st:k==='ped'?'Agregado':'En camino',met:'Efectivo',...(pre||{})};
  sheet(`<h2>${c.i} ${id?'Editar':'Nuevo'}</h2>${c.f.map(f=>field(f,x[f[0]]??'')).join('')}${k==='sup'&&id?supHist(x.name):''}<button class="btn" onclick="saveCol('${k}',${id})">Guardar</button>${id&&!can('del')?'<button class="btn s" onclick="reqSheet(\'del\')">🔒 SOLICITAR PERMISO para eliminar</button>':''}${id&&can('del')?`<button class="btn d" onclick="delCol('${k}',${id})">🗑️ ELIMINAR</button>`:''}<button class="btn s" onclick="closeSheet()">Cancelar</button>`)}
 function saveCol(k,id){const c=COL[k];const vals={};c.f.forEach(f=>vals[f[0]]=val(f));
  if(k==='ped'&&!vals.sup)return toast('Elegí el proveedor');
  if(id){const x=db[k].find(y=>y.id===id);const ch=c.f.filter(f=>String(x[f[0]]??'')!==String(vals[f[0]])).map(f=>f[1]+': '+(x[f[0]]??'—')+' → '+vals[f[0]]);
   if(!me.admin&&ch.some(z=>z.startsWith('Fecha')))useGrant('date');Object.assign(x,vals);log('Modificó '+c.t.toLowerCase(),c.line(x)[0],null,ch.join(' | '));const fc=ch.filter(z=>z.startsWith('Fecha'));if(fc.length)log('Cambió fecha manualmente',c.line(x)[0],null,fc.join(' | '));
-  if(k==='ped'&&vals.st==='Recibido'&&!db.merc.some(m=>m.ped===id)){const m={id:nid(),ped:id,sup:x.sup,date:iso(),amt:x.amt,note:'Desde pedido',u:me.name,h:hm()};db.merc.push(m);log('Registró mercadería recibida',x.sup+' '+money(x.amt))}}
- else{const x={id:nid(),...vals,u:me.name,h:hm()};if(!x.date&&k!=='sup')x.date=iso();db[k].push(x);log('Agregó '+(c.one||c.t.toLowerCase().replace(/s$/,'')),c.line(x)[0]);if(k==='ped')Remote.notify('pedidos','📋 NUEVO PEDIDO',x.sup+' llega el '+fd(x.date),'ped');if(k==='merc'&&x.ped){const o=db.ped.find(y=>y.id===x.ped);if(o&&o.st!=='Recibido'){o.st='Recibido';log('Marcó pedido como recibido',o.sup+' — '+money(o.amt))}}}
- save();closeSheet()}
+  if(k==='ped'&&vals.st==='Recibido'&&!db.merc.some(m=>m.ped===id)){const m={id:nid(),ped:id,sup:x.sup,date:iso(),amt:x.amt,note:'Desde pedido',u:me.name,h:hm()};db.merc.push(m);PENDM=m.id;log('Registró mercadería recibida',x.sup+' '+money(x.amt))}}
+ else{const x={id:nid(),...vals,u:me.name,h:hm()};if(!x.date&&k!=='sup'&&k!=='ped')x.date=iso();if(k==='ped')x.cd=iso();db[k].push(x);log('Agregó '+(c.one||c.t.toLowerCase().replace(/s$/,'')),c.line(x)[0]);if(k==='ped')Remote.notify('pedidos','📋 NUEVO PEDIDO',x.sup+(x.date?' llega el '+fd(x.date):' fue agregado a Pedidos'),'ped');if(k==='merc'&&x.ped){const o=db.ped.find(y=>y.id===x.ped);if(o&&o.st!=='Recibido'){o.st='Recibido';log('Marcó pedido como recibido',o.sup+' — '+money(o.amt))}}}
+ save();closeSheet();if(PENDM){const i=PENDM;PENDM=0;toast('Pasó a Mercadería recibida: cargá qué llegó.');mercForm(i)}}
 function delCol(k,id){ask('¿Eliminar este registro? Va a la papelera y queda en el historial.',()=>{softDelete(k,id);closeSheet()})}
 
 const PF=[['name','Nombre'],['barcode','Código de barras','barcode'],['cat','Categoría'],['sup','Proveedor','sup'],['price','Precio normal','num'],['unit','Unidad del precio (ej: /kg)'],['disc','Descuento / oferta (%)','num'],['stock','Stock actual','num'],['min','Stock mínimo','num'],['venc','Fecha de vencimiento','date'],['emoji','Emoji']];

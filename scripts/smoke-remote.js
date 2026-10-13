@@ -72,10 +72,11 @@ const ok=(c,m)=>{if(!c)throw new Error(m)};
  // --- calculadora compartida ---
  const same=(a,b)=>JSON.stringify(a)===JSON.stringify(b);
  A.run('calcDay=null');A.vals['#cin']='1.500,50';A.run('calcAdd()');A.vals['#cin']='2000';A.run('calcAdd()');await settle(A);
- ok(B.run('calcTotal()')===3500.5&&server.table('calc_entries').length===2,'Cami ve el total de la calculadora de Gabi y está en la base central');
- const c1=A.run('calcItems()[0].id');B.run('calcDay=null');B.vals['#ce']='3000';B.run('calcSaveEdit('+c1+')');await settle(B);ok(A.run('calcTotal()')===5000,'Gabi ve la corrección de Cami');
- B.run('calcDel('+c1+')');B.run('askYes()');await settle(B);ok(A.run('calcTotal()')===2000&&server.table('calc_entries').length===1,'eliminar un importe se comparte');
- A.run('calcClearAsk()');A.run('askYes()');await settle(A);ok(B.run('calcTotal()')===0&&server.table('calc_entries').length===0&&A.run('trashActive().filter(t=>t.coll==="calc").length')===2,'limpiar vacía el día para todas y queda en la papelera');
+ ok(B.run('calcExtras()')===3500.5&&server.table('calc_entries').length===2,'Cami ve el total de la calculadora de Gabi y está en la base central');
+ const c1=A.run('calcItems()[0].id');B.run('calcDay=null');B.vals['#ce']='3000';B.run('calcSaveEdit('+c1+')');await settle(B);ok(A.run('calcExtras()')===5000,'Gabi ve la corrección de Cami');
+ B.run('calcDel('+c1+')');B.run('askYes()');await settle(B);ok(A.run('calcExtras()')===2000&&server.table('calc_entries').length===1,'eliminar un importe se comparte');
+ ok(A.run('calcPedTotal()')===1000&&A.run('calcTotal()')===A.run('calcExtras()')+1000,'el total suma solo el pedido de Cami, sin cargar nada a mano');
+ A.run('calcClearAsk()');A.run('askYes()');await settle(A);ok(B.run('calcExtras()')===0&&server.table('calc_entries').length===0&&A.run('trashActive().filter(t=>t.coll==="calc").length')===2,'limpiar vacía el día para todas y queda en la papelera');
  // --- vencimientos por lote compartidos ---
  prod(A,{name:'Tomate',price:100,stock:1});await settle(A);const lid=A.run('db.prod.find(p=>p.name==="Tomate").id');
  Object.assign(A.vals,{'#lv_d':'2030-03-10','#lv_q':'4','#lv_n':'A'});A.run('saveLot('+lid+',0,false)');Object.assign(A.vals,{'#lv_d':'2030-02-01','#lv_q':'','#lv_n':'B'});A.run('saveLot('+lid+',0,false)');await settle(A);
