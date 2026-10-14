@@ -192,6 +192,8 @@ delete vals['#sqc'];
  b2.amt=9500;ok(Math.round(calcPedTotal()*100)===Math.round((t0+24500)*100),'si se modifica un pedido, el total se actualiza');
  softDelete('ped',a.id);ok(Math.round(calcPedTotal()*100)===Math.round((t0+9500)*100)&&db.trash.some(t=>t.coll==='ped'),'un pedido en papelera deja de sumar');
  ok(calcCard().includes('TOTAL DEL DÍA'),'la calculadora muestra el total')}
+// --- menú sin Jornada diaria (la pantalla sigue existiendo) ---
+ok(!NAV.some(n=>n[0]==='jornada')&&!menu().includes('Jornada diaria')&&jornada().includes('Jornada diaria'),'Jornada diaria fuera del menú, pantalla y datos intactos');
 // --- el precio nuevo no arranca con un 0 delante ---
 {const f=field(['price','Precio normal','num'],0);ok(f.includes('value=""')&&f.includes('placeholder="0"'),'un precio vacío no muestra 0');
  const g=field(['price','Precio normal','num'],14500.5);ok(g.includes('value="14500,5"'),'un precio cargado se muestra tal cual');

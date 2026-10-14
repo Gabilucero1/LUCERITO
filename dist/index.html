@@ -433,7 +433,7 @@ gastos:{t:'Gastos',i:'🛒',f:[['con','Concepto'],['amt','Importe','num'],['date
 notas:{t:'Notas',i:'📝',f:[['txt','Nota','area']],line:x=>[x.txt,x.u+' · '+fd(x.date)+' '+x.h]}
 };
 // Pagos diarios e Historial & Memoria ya no están en el menú: siguen existiendo y se abren desde las tarjetas de Inicio (go('pagos') / go('hist')).
-const NAV=[['home','🏠','Inicio'],['jornada','📅','Jornada diaria'],['merc','📦','Mercadería recibida'],['sup','🚚','Proveedores'],['ped','📋','Pedidos'],['notas','📝','Notas'],['venc','⏰','Vencimientos'],['alert','🔔','Alertas'],['prod','🏷️','Productos'],['cig','🚬','Cigarrillos'],['stock','📦','Control de stock'],['trash','🗑️','Papelera'],['users','👥','Usuarios'],['config','⚙️','Configuración'],['perfil','👤','Perfil']];
+const NAV=[['home','🏠','Inicio'],['merc','📦','Mercadería recibida'],['sup','🚚','Proveedores'],['ped','📋','Pedidos'],['notas','📝','Notas'],['venc','⏰','Vencimientos'],['alert','🔔','Alertas'],['prod','🏷️','Productos'],['cig','🚬','Cigarrillos'],['stock','📦','Control de stock'],['trash','🗑️','Papelera'],['users','👥','Usuarios'],['config','⚙️','Configuración'],['perfil','👤','Perfil']];
 
 // Componentes visuales reutilizables
 const pcard=(p,extra='',fn='editProd')=>`<button class="card t" onclick="${fn}(${p.id})"><div class="row">${pimgH(p)}<div class="grow"><div class="big">${esc(p.name)}</div><div class="mut">${esc(p.cat)}${p.sup?' · '+esc(p.sup):''}</div>${extra}</div><div style="text-align:right"><div class="big">${money(offer(p))}${esc(p.unit||'')}</div>${p.disc?`<div class="mut"><s>${money(p.price)}</s> −${p.disc}%</div>`:''}<div class="mut">Stock ${p.stock}</div>${stockTag(p)}</div></div></button>`;
