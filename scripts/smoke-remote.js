@@ -85,6 +85,9 @@ const ok=(c,m)=>{if(!c)throw new Error(m)};
  A.run('db.prod.find(p=>p.id===%d).stock=24'.replace('%d',cid));A.run('qmove(%d,-1)'.replace('%d',cid));await settle(A);await sleep(60);
  ok(server.table('products').find(r=>r.data.name==='Coca Cola').data.stock===23&&B.run('db.prod.find(p=>p.name==="Coca Cola").stock')===23,'Gabi hace SALIDA 24 → 23 y Cami ve 23 (stock compartido)');
  B.run("vals['#sqc']='1'");B.run('qmove(%d,1)'.replace('%d',cid));await settle(B);await sleep(60);ok(A.run('db.prod.find(p=>p.name==="Coca Cola").stock')===24,'la ENTRADA de Cami también llega a Gabi');
+ A.run("Object.assign(vals,{'#cn':'Marlboro','#cp':'3000','#ci':'20'});cigAdd()");await settle(A);await sleep(60);
+ const mid=A.run('db.prod.find(p=>p.name==="Marlboro").id');A.run("CQ={};CQ[%d]='17';CAP='';cigSave()".replace('%d',mid));await settle(A);await sleep(60);
+ ok(B.run('db.prod.find(p=>p.name==="Marlboro").stock')===17&&B.run('db.prod.find(p=>p.name==="Marlboro").conteos[0].vend')===3&&server.table('products').find(r=>r.data.name==='Marlboro').data.conteos.length===1,'el conteo de cigarrillos se guarda y lo ve la otra usuaria');
  // --- foto de perfil: se guarda y NO cierra la sesión ---
  A.run('newAv="data:image/jpeg;base64,AAAA"');Object.assign(A.vals,{'#pn':'Gabi','#pl':'R'});A.run('saveMe()');await settle(A);await sleep(40);
  ok(server.table('profiles').find(p=>p.email==='gabi@email.com').photo==='data:image/jpeg;base64,AAAA','la foto queda guardada en el perfil');

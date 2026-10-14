@@ -433,7 +433,7 @@ gastos:{t:'Gastos',i:'🛒',f:[['con','Concepto'],['amt','Importe','num'],['date
 notas:{t:'Notas',i:'📝',f:[['txt','Nota','area']],line:x=>[x.txt,x.u+' · '+fd(x.date)+' '+x.h]}
 };
 // Pagos diarios e Historial & Memoria ya no están en el menú: siguen existiendo y se abren desde las tarjetas de Inicio (go('pagos') / go('hist')).
-const NAV=[['home','🏠','Inicio'],['jornada','📅','Jornada diaria'],['merc','📦','Mercadería recibida'],['sup','🚚','Proveedores'],['ped','📋','Pedidos'],['notas','📝','Notas'],['venc','⏰','Vencimientos'],['alert','🔔','Alertas'],['prod','🏷️','Productos'],['stock','📦','Control de stock'],['trash','🗑️','Papelera'],['users','👥','Usuarios'],['config','⚙️','Configuración'],['perfil','👤','Perfil']];
+const NAV=[['home','🏠','Inicio'],['jornada','📅','Jornada diaria'],['merc','📦','Mercadería recibida'],['sup','🚚','Proveedores'],['ped','📋','Pedidos'],['notas','📝','Notas'],['venc','⏰','Vencimientos'],['alert','🔔','Alertas'],['prod','🏷️','Productos'],['cig','🚬','Cigarrillos'],['stock','📦','Control de stock'],['trash','🗑️','Papelera'],['users','👥','Usuarios'],['config','⚙️','Configuración'],['perfil','👤','Perfil']];
 
 // Componentes visuales reutilizables
 const pcard=(p,extra='',fn='editProd')=>`<button class="card t" onclick="${fn}(${p.id})"><div class="row">${pimgH(p)}<div class="grow"><div class="big">${esc(p.name)}</div><div class="mut">${esc(p.cat)}${p.sup?' · '+esc(p.sup):''}</div>${extra}</div><div style="text-align:right"><div class="big">${money(offer(p))}${esc(p.unit||'')}</div>${p.disc?`<div class="mut"><s>${money(p.price)}</s> −${p.disc}%</div>`:''}<div class="mut">Stock ${p.stock}</div>${stockTag(p)}</div></div></button>`;
@@ -493,6 +493,7 @@ function page(){
  if(view==='stock')return stockPage();
  if(view==='trash')return trashPage();
  if(view==='prod')return prodPage();
+ if(view==='cig')return cigPage();
  if(view==='venc')return vencPage();
  if(view==='alert')return alertPage();
  if(view==='hist')return histPage();
@@ -817,6 +818,40 @@ function renSecForm(){const s=sectores().find(x=>x.key===psec);if(!s)return;shee
 function renSec(){const n=String($('#sn').value||'').trim(),s=sectores().find(x=>x.key===psec);if(!n||!s)return toast('Escribí el nombre del sector');
  if(secKey(n)!==s.key&&sectores().some(x=>x.key===secKey(n)))return toast('Ya existe un sector con ese nombre');
  s.items.forEach(p=>{p.cat=n});log('Cambió el nombre de un sector',s.name,s.name,n);psec=secKey(n);save();closeSheet()}
+
+// Cigarrillos: conteo diario por marca. Nadie anota ventas: una persona cuenta una vez por día y la app calcula lo vendido.
+// Vendidos = stock que la app esperaba (último conteo + entradas − salidas registradas) − lo que se contó hoy.
+// No hay tablas nuevas: cada marca es un producto (sector "Cigarrillos") y sus conteos se guardan dentro del producto (p.conteos).
+const isCig=p=>p.cig===true||secKey(p.cat)==='cigarrillos';
+const cigList=()=>db.prod.filter(isCig).sort((a,b)=>a.name.localeCompare(b.name,'es'));
+const r2=n=>Math.round(n*100)/100;
+let CQ={},CAP='';
+function cigSes(){const m=new Map();cigList().forEach(p=>(p.conteos||[]).forEach(c=>{if(!m.has(c.sid))m.set(c.sid,{sid:c.sid,d:c.d,h:c.h,u:c.u,ap:c.ap==null?null:c.ap,rows:[]});m.get(c.sid).rows.push({p,c})}));return [...m.values()].sort((a,b)=>b.sid-a.sid)}
+function cigTot(s){const vend=s.rows.reduce((t,r)=>t+r.c.vend,0),esp=r2(s.rows.reduce((t,r)=>t+r.c.vend*r.c.price,0)),dias=Math.max(0,...s.rows.map(r=>r.c.dias||0)),res=s.ap==null?null:r2(s.ap-esp);return {vend,esp,dias,res}}
+const cigRes=t=>t.res==null?'':t.res===0?'<b style="color:var(--ok)">✅ Justo: la plata coincide</b>':t.res>0?'<b style="color:var(--ok)">Sobran '+money(t.res)+'</b>':'<b style="color:var(--warn)">⚠️ Faltan '+money(-t.res)+'</b>';
+function cigSum(s,full){const t=cigTot(s);
+ return `<div class="card"><div class="big">${fd(s.d)} · ${s.h}</div><div class="mut" style="font-size:12px">Contó: ${esc(s.u)}${t.dias>1?' · este conteo cubre '+t.dias+' días':''}</div>${full?s.rows.map(r=>`<div class="mut" style="margin-top:6px"><b>${esc(r.p.name)}</b>: vendió <b>${r.c.vend}</b> (esperaba ${r.c.esp}, contaste ${r.c.qty})${r.c.dif>0?'<br>⚠️ Contaste '+r.c.dif+' más de lo esperado: revisá si falta cargar una entrada de mercadería.':''}</div>`).join(''):''}<div style="margin-top:8px">Paquetes vendidos: <b>${t.vend}</b></div><div>Plata que debería haber: <b>${money(t.esp)}</b></div>${s.ap!=null?`<div>Plata apartada: <b>${money(s.ap)}</b></div><div style="margin-top:4px">${cigRes(t)}</div>`:'<div class="mut">No cargaste la plata apartada.</div>'}</div>`}
+function cigPage(){const L=cigList(),S=cigSes();
+ return `<h2>🚬 Cigarrillos</h2><p class="mut" style="font-size:12px">Para qué sirve esta sección: contá los cigarrillos una vez por día (a la mañana). La app compara con lo que debería haber, calcula cuántos se vendieron desde el último conteo y cuánta plata tendría que haber para volver a comprar. Nadie tiene que anotar cada venta.</p>
+ ${L.length?`<div class="card" style="border-left:6px solid var(--p2,#e91e8c)"><div class="ba-t" style="margin-bottom:4px">📋 CONTEO DE HOY</div><div class="mut" style="font-size:12px">Escribí cuántos hay ahora de cada marca. Si una marca no la contás hoy, dejala vacía. A la mañana siguiente la app te dice cuántos se vendieron.</div>${L.map(p=>{const last=(p.conteos||[])[0];return `<div class="row" style="padding:10px 0;border-top:1px solid var(--p1)"><div class="grow"><div class="big">${esc(p.name)}</div><div class="mut" style="font-size:12px">Hay en la app: <b>${Number(p.stock)||0}</b>${last?' · último conteo: '+fd(last.d):' · todavía sin conteo'} · ${money(p.price)}</div></div><input class="bigin" style="width:92px;text-align:center" type="number" inputmode="numeric" min="0" placeholder="Hay" value="${esc(CQ[p.id]??'')}" oninput="CQ[${p.id}]=this.value" aria-label="Cuántos hay de ${esc(p.name)}"><button class="ib" style="background:var(--p1);color:var(--ink)" onclick="editProd(${p.id})" aria-label="Editar marca">✏️</button></div>`}).join('')}<label style="margin-top:12px">Plata apartada para reponer (opcional)</label><input class="bigin" inputmode="decimal" placeholder="Ej: 150.000" value="${esc(CAP)}" oninput="CAP=this.value"><button class="btn" onclick="cigSave()">GUARDAR CONTEO</button></div>`:'<div class="empty">Todavía no cargaste ninguna marca.</div>'}
+ <button class="btn s" onclick="cigAddForm()">➕ AGREGAR MARCA</button>
+ ${S.length?`<h2 style="font-size:18px;margin-top:18px">Último conteo</h2>${cigSum(S[0],true)}${S.length>1?`<h2 style="font-size:18px;margin-top:14px">Conteos anteriores</h2>${S.slice(1,8).map(s=>cigSum(s,false)).join('')}`:''}`:''}`}
+function cigAddForm(){sheet(`<h2>➕ Agregar marca de cigarrillos</h2><label>Marca (ej: Marlboro Box)</label><input id="cn" class="bigin" placeholder="Nombre de la marca"><label>Precio de venta del paquete</label><input id="cp" class="bigin" inputmode="decimal" placeholder="Ej: 3.500"><label>¿Cuántos hay ahora? (opcional)</label><input id="ci" class="bigin" type="number" inputmode="numeric" min="0" placeholder="0"><button class="btn" onclick="cigAdd()">GUARDAR MARCA</button><button class="btn s" onclick="closeSheet()">Cancelar</button>`)}
+function cigAdd(){const name=String($('#cn').value||'').trim(),price=numVal($('#cp').value),iv=String($('#ci').value||'').trim(),n=iv===''?0:Number(iv);
+ if(!name)return toast('Escribí la marca');if(!(price>0))return toast('Escribí el precio de venta');if(!Number.isInteger(n)||n<0)return toast('Revisá cuántos hay ahora');
+ if(cigList().some(p=>secKey(p.name)===secKey(name)))return toast('Esa marca ya está cargada');
+ const p={id:nid(),hist:[],smov:[],name,barcode:'',cat:'Cigarrillos',sup:'',price,unit:'',disc:0,stock:0,min:0,venc:'',emoji:'🚬',cig:true,conteos:[]};db.prod.push(p);
+ log('Agregó producto',name,null,'marca de cigarrillos · '+money(price));if(n>0)stockMove(p,n,'Stock inicial (cigarrillos)');save();closeSheet();toast('Marca agregada')}
+function cigSave(){const rows=[];
+ for(const p of cigList()){const v=String(CQ[p.id]??'').trim();if(v==='')continue;if(!/^\d+$/.test(v))return toast('Revisá el número de '+p.name);rows.push({p,q:Number(v)})}
+ if(!rows.length)return toast('Escribí cuántos hay de al menos una marca');
+ const aps=String(CAP||'').trim(),ap=aps===''?null:parseAR(aps);if(aps!==''&&isNaN(ap))return toast('Revisá la plata apartada');
+ const sid=nid();let tv=0,te=0;
+ rows.forEach(({p,q})=>{const esp=Number(p.stock)||0,last=(p.conteos||[])[0],vend=Math.max(0,esp-q),dias=last?Math.max(0,days(last.d)*-1):0;
+  p.conteos=[{sid,d:iso(),h:hm(),u:me.name,esp,qty:q,vend,dif:q-esp,price:Number(p.price)||0,ap,dias},...(p.conteos||[])].slice(0,120);
+  tv+=vend;te+=vend*(Number(p.price)||0);stockMove(p,q,'Conteo de cigarrillos')});
+ log('Conteo de cigarrillos',rows.length+(rows.length===1?' marca':' marcas'),null,tv+' vendidos · debería haber '+money(r2(te))+(ap==null?'':' · apartado '+money(ap)));save();
+ CQ={};CAP='';const s=cigSes().find(x=>x.sid===sid);sheet(`<h2>✅ Conteo guardado</h2>${s?cigSum(s,true):''}<button class="btn" onclick="closeSheet()">Listo</button>`)}
 
 // Vencimientos por lote: un producto puede tener VARIAS fechas (distintos lotes). Se guardan dentro del producto (p.lots),
 // por eso no hace falta cambiar la base de datos. p.venc queda siempre con la fecha MÁS PRÓXIMA: así las alertas, Inicio y los avisos siguen igual.

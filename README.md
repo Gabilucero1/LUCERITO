@@ -192,3 +192,6 @@ Cómo ejecutarla: Supabase → **SQL Editor** → **New query** → pegar el con
 
 ## Productos por sectores
 `src/js/sectores.js`: Productos muestra primero los sectores (Fideos, Harina, Gaseosas…) con la cantidad de productos y avisos de stock/vencimiento; al entrar a uno se ven sus productos y se pueden agregar nuevos ya dentro de ese sector. El sector es el campo "Sector" (antes "Categoría") que ya existía en cada producto: no hay migración ni tablas nuevas. Los productos sin sector aparecen en "Sin sector". La búsqueda sigue mostrando todos los productos.
+
+## Cigarrillos (conteo diario)
+`src/js/cigs.js`, sección "🚬 Cigarrillos" del menú. Cada marca es un producto del sector "Cigarrillos". Una persona cuenta una vez por día; la app calcula vendidos = stock esperado (último conteo + entradas − salidas registradas) − contado, y la plata que debería haber (vendidos × precio de venta), y la compara con la plata apartada (opcional). Los conteos se guardan dentro del producto (`p.conteos`), sin tablas nuevas ni migración. Si se cuenta de más, no se inventan ventas y se avisa. Si pasan varios días sin contar, el conteo avisa cuántos días cubre.
