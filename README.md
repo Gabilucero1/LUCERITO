@@ -195,3 +195,4 @@ Cómo ejecutarla: Supabase → **SQL Editor** → **New query** → pegar el con
 
 ## Cigarrillos (conteo diario)
 `src/js/cigs.js`, sección "🚬 Cigarrillos" del menú. Cada marca es un producto del sector "Cigarrillos". Una persona cuenta una vez por día; la app calcula vendidos = stock esperado (último conteo + entradas − salidas registradas) − contado, y la plata que debería haber (vendidos × precio de venta), y la compara con la plata apartada (opcional). Los conteos se guardan dentro del producto (`p.conteos`), sin tablas nuevas ni migración. Si se cuenta de más, no se inventan ventas y se avisa. Si pasan varios días sin contar, el conteo avisa cuántos días cubre.
+- **Cigarrillos – permisos del último conteo:** cualquier usuaria puede **editar el conteo de hoy** (se recalcula lo vendido y la plata); solo la **administradora** puede **eliminar el último conteo** (el stock vuelve a lo anterior si no hubo otros movimientos, y queda anotado en el historial).
