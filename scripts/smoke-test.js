@@ -223,7 +223,16 @@ delete vals['#sqc'];
  CQ={};CQ[lu.id]='12';CAP='';cigSave();ok(lu.stock===12&&lu.conteos[0].vend===0&&lu.conteos[0].dif===4&&cigSum(cigSes()[0],true).includes('más de lo esperado'),'si contás de más, no inventa ventas y avisa');
  CQ={};cigSave();ok(true,'conteo vacío no rompe');
  ok(db.log.some(l=>l.act==='Conteo de cigarrillos')&&ma.smov.some(m=>m.motivo==='Conteo de cigarrillos'),'queda en el historial');
- ok(cigPage().includes('Último conteo')&&cigPage().includes('Conteos anteriores'),'muestra el último conteo y los anteriores')}
+ ok(cigPage().includes('Último conteo')&&cigPage().includes('Conteos anteriores'),'muestra el último conteo y los anteriores');
+ // editar hoy: cualquiera · eliminar el último: solo la administradora
+ {const adm=me.admin;me.admin=false;const sid=cigSes()[0].sid;
+  ok(cigPage().includes('EDITAR EL CONTEO DE HOY')&&!cigPage().includes('ELIMINAR EL ÚLTIMO CONTEO')&&cigPage().includes('Solo la administradora puede eliminar'),'una usuaria común ve Editar pero no Eliminar');
+  vals['#ce_'+lu.id]='9';vals['#cea']='';cigEditSave(sid);
+  ok(lu.conteos[0].qty===9&&lu.conteos[0].vend===0&&lu.conteos[0].dif===1&&lu.stock===9,'cualquiera puede corregir el conteo de hoy y se recalcula');
+  cigDel(sid);ok(lu.conteos[0].sid===sid&&lu.stock===9,'una usuaria común NO puede eliminar el último conteo');
+  me.admin=true;ok(cigPage().includes('ELIMINAR EL ÚLTIMO CONTEO'),'la administradora ve Eliminar');
+  cigDel(sid);ok(lu.conteos[0].qty===8&&lu.stock===8&&cigSes()[0].sid!==sid&&db.log.some(l=>l.act==='Eliminó el último conteo de cigarrillos'),'la administradora elimina el último conteo: vuelve el stock y queda en el historial');
+  me.admin=adm}}
 logout();splash=true;login();splash=false;authView='reg';login();authView='forgot';fpStep=1;login();authView='login';login();
 // --- persistencia: recargar = leer lo guardado ---
 const re=Store.load();ok(re.prod.length===11&&re.users.length===2&&re.log.length>20,'los datos sobreviven a recargar');
