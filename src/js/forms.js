@@ -20,10 +20,10 @@ function saveCol(k,id){const c=COL[k];const vals={};c.f.forEach(f=>vals[f[0]]=va
  save();closeSheet();if(PENDM){const i=PENDM;PENDM=0;toast('Pasó a Mercadería recibida: cargá qué llegó.');mercForm(i)}}
 function delCol(k,id){ask('¿Eliminar este registro? Va a la papelera y queda en el historial.',()=>{softDelete(k,id);closeSheet()})}
 
-const PF=[['name','Nombre'],['barcode','Código de barras','barcode'],['cat','Categoría'],['sup','Proveedor','sup'],['price','Precio normal','num'],['unit','Unidad del precio (ej: /kg)'],['disc','Descuento / oferta (%)','num'],['stock','Stock actual','num'],['min','Stock mínimo','num'],['venc','Fecha de vencimiento','date'],['emoji','Emoji']];
-function editProd(id,pick,pre){ED=false;EDP=id||0;
+const PF=[['name','Nombre'],['barcode','Código de barras','barcode'],['cat','Sector (ej: Fideos)'],['sup','Proveedor','sup'],['price','Precio normal','num'],['unit','Unidad del precio (ej: /kg)'],['disc','Descuento / oferta (%)','num'],['stock','Stock actual','num'],['min','Stock mínimo','num'],['venc','Fecha de vencimiento','date'],['emoji','Emoji']];
+function editProd(id,pick,pre,cat){ED=false;EDP=id||0;
  if(pick&&!id){sheet(`<h2>Elegí el producto</h2>${db.prod.map(p=>`<button class="card t" onclick="editProd(${p.id})">${esc(p.emoji)} ${esc(p.name)}</button>`).join('')}<button class="btn s" onclick="closeSheet()">Cancelar</button>`);return}
- const p=id?db.prod.find(x=>x.id===id):{price:0,disc:0,stock:0,min:0,emoji:'🏷️',barcode:pre||''};
+ const p=id?db.prod.find(x=>x.id===id):{price:0,disc:0,stock:0,min:0,emoji:'🏷️',barcode:pre||'',cat:cat||''};
  sheet(`<h2>${id?esc(p.name):'Producto nuevo'}</h2>${!id&&pre?`<div class="card">Código detectado: <b>${esc(pre)}</b></div>`:''}${id?stockQuickBlock(p):''}${PF.map(f=>field(f,p[f[0]]??'')).join('')}<div class="card" style="margin-top:12px">Precio oferta: <b id="po">${money(offer(p))}</b></div>
  ${id?stockHist(p):''}
  ${id&&p.hist.length?`<label>Historial de precios</label>${p.hist.slice().reverse().map(h=>`<div class="mut">${fd(h.d)} ${h.h} · ${money(h.old)} → ${money(h.nw)} (${esc(h.u)})</div>`).join('')}`:''}

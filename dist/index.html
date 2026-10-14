@@ -541,7 +541,7 @@ const supCard=x=>`<div class="card t"><div onclick="editCol('sup',${x.id})" styl
 function prodPage(){return `<h2>🏷️ Productos</h2><button class="btn big" onclick="scanProducts()">📷 ESCANEAR CÓDIGO DE BARRAS</button><input class="bigin" placeholder="🔍 Buscar producto por nombre o código" oninput="q=this.value;$('#pl').innerHTML=plist()" value="${esc(q)}"><button class="btn" style="margin-top:12px" onclick="editProd(0)">AGREGAR PRODUCTO MANUALMENTE</button><div id="pl">${plist()}</div>`}
 let q='',aq='';
 const matchP=(p,t)=>{t=t.trim().toLowerCase();return !t||[p.name,p.brand].some(x=>String(x||'').toLowerCase().includes(t))||String(p.barcode||'').includes(t)};
-const plist=()=>db.prod.filter(p=>matchP(p,q)).map(p=>pcard(p)).join('')||'<div class="empty">Sin resultados.</div>';
+const plist=()=>String(q||'').trim()?(db.prod.filter(p=>matchP(p,q)).map(p=>pcard(p)).join('')||'<div class="empty">Sin resultados.</div>'):psec===null?secList():secView();
 function aumList(){const t=aq.trim().toLowerCase();
  if(!t){const au=aumentosHoy();return (au.slice(0,5).map(priceCard).join('')||'<div class="mut" style="margin:8px 0">Hoy no se registraron aumentos.</div>')+(au.length>5?`<button class="btn s" onclick="go('alert')">Ver los ${au.length} aumentos</button>`:'')}
  return db.alerts.filter(a=>a.nw>a.old).filter(a=>{const p=prodOf(a);return [a.name,p.brand].some(x=>String(x||'').toLowerCase().includes(t))||String(p.barcode||'').includes(t)}).map(priceCard).join('')||'<div class="mut" style="margin:8px 0">No hay aumentos para esa búsqueda.</div>'}
@@ -573,10 +573,10 @@ function saveCol(k,id){const c=COL[k];const vals={};c.f.forEach(f=>vals[f[0]]=va
  save();closeSheet();if(PENDM){const i=PENDM;PENDM=0;toast('Pasó a Mercadería recibida: cargá qué llegó.');mercForm(i)}}
 function delCol(k,id){ask('¿Eliminar este registro? Va a la papelera y queda en el historial.',()=>{softDelete(k,id);closeSheet()})}
 
-const PF=[['name','Nombre'],['barcode','Código de barras','barcode'],['cat','Categoría'],['sup','Proveedor','sup'],['price','Precio normal','num'],['unit','Unidad del precio (ej: /kg)'],['disc','Descuento / oferta (%)','num'],['stock','Stock actual','num'],['min','Stock mínimo','num'],['venc','Fecha de vencimiento','date'],['emoji','Emoji']];
-function editProd(id,pick,pre){ED=false;EDP=id||0;
+const PF=[['name','Nombre'],['barcode','Código de barras','barcode'],['cat','Sector (ej: Fideos)'],['sup','Proveedor','sup'],['price','Precio normal','num'],['unit','Unidad del precio (ej: /kg)'],['disc','Descuento / oferta (%)','num'],['stock','Stock actual','num'],['min','Stock mínimo','num'],['venc','Fecha de vencimiento','date'],['emoji','Emoji']];
+function editProd(id,pick,pre,cat){ED=false;EDP=id||0;
  if(pick&&!id){sheet(`<h2>Elegí el producto</h2>${db.prod.map(p=>`<button class="card t" onclick="editProd(${p.id})">${esc(p.emoji)} ${esc(p.name)}</button>`).join('')}<button class="btn s" onclick="closeSheet()">Cancelar</button>`);return}
- const p=id?db.prod.find(x=>x.id===id):{price:0,disc:0,stock:0,min:0,emoji:'🏷️',barcode:pre||''};
+ const p=id?db.prod.find(x=>x.id===id):{price:0,disc:0,stock:0,min:0,emoji:'🏷️',barcode:pre||'',cat:cat||''};
  sheet(`<h2>${id?esc(p.name):'Producto nuevo'}</h2>${!id&&pre?`<div class="card">Código detectado: <b>${esc(pre)}</b></div>`:''}${id?stockQuickBlock(p):''}${PF.map(f=>field(f,p[f[0]]??'')).join('')}<div class="card" style="margin-top:12px">Precio oferta: <b id="po">${money(offer(p))}</b></div>
  ${id?stockHist(p):''}
  ${id&&p.hist.length?`<label>Historial de precios</label>${p.hist.slice().reverse().map(h=>`<div class="mut">${fd(h.d)} ${h.h} · ${money(h.old)} → ${money(h.nw)} (${esc(h.u)})</div>`).join('')}`:''}
@@ -794,6 +794,29 @@ function setPref(k,v){me.prefs=Object.assign({},me.prefs,{[k]:v});Remote.savePro
 function statusRows(){
  if(Remote.on)return [['✅','Conectada a Supabase','Los datos son centrales: todas las personas ven lo mismo y los cambios llegan en tiempo real'],['✅','Cuentas','Autenticación real de Supabase (correo + contraseña). El rol y el estado de cada cuenta los controla la base de datos'],['✅','Permisos','Reglas RLS en la base de datos: lo crítico (usuarios, papelera definitiva, configuración) solo lo hace la administradora'],['✅','Historial','Se guarda en el servidor y no se puede modificar ni borrar desde la app'],['⚠️','Recuperar contraseña','Se envía un enlace por correo con el servicio de correo (SMTP) configurado en Supabase'],[Push.configured()?'✅':'⚠️','Notificaciones push',Push.configured()?'Firebase configurado en esta versión. Los envíos los hace el servidor (api/notify y api/cron-alerts)':'Falta configurar Firebase (variables FIREBASE_*)'],['⚠️','Sesiones','Se cierran a nivel de la app. Para invalidar el acceso por completo, desactivá la cuenta'],['ℹ️','Tipos de acceso','El código (GitHub), el Artifact de Claude, la app Lucerito y los permisos internos son cosas distintas. Ver README']];
  return [['⚠️','MODO LOCAL (sin servidor)','Los datos se guardan solo en este dispositivo y NO se comparten con otras personas. Para compartirlos hay que conectar Supabase (ver README)'],['✅','Pantallas y lógica','Productos, stock, pedidos, aumentos, papelera e historial funcionan'],['⚠️','Cuentas','Demostración local: no es autenticación real'],['⚠️','Permisos','Solo controlan la pantalla, sin servidor no son seguridad real'],['⚠️','Recuperar contraseña','Preparada con Supabase (enlace por correo). En modo local solo existe la prueba'],['⚠️','Notificaciones push','Necesitan Supabase + Firebase (ver README)'],['ℹ️','Tipos de acceso','El código (GitHub), el Artifact de Claude, la app Lucerito y los permisos internos son cosas distintas. Ver README']]}
+
+// Productos por sectores (Fideos, Harina, Gaseosas…). El sector es el campo "cat" que ya tiene cada producto: no hay tablas nuevas ni migración.
+// Un sector existe mientras tenga productos. Se crea al agregar su primer producto.
+let psec=null; // null = lista de sectores · texto = sector abierto ('' = productos sin sector)
+const secKey=c=>String(c||'').trim().toLowerCase();
+const SEC0='Sin sector';
+function sectores(){const m=new Map();db.prod.forEach(p=>{const k=secKey(p.cat);if(!m.has(k))m.set(k,{key:k,name:k?String(p.cat).trim():SEC0,items:[]});m.get(k).items.push(p)});
+ return [...m.values()].sort((a,b)=>a.key===''?1:b.key===''?-1:a.name.localeCompare(b.name,'es'))}
+const secAlerts=it=>({stock:it.filter(p=>stockState(p)!=='ok').length,venc:it.filter(p=>p.venc&&days(p.venc)<=db.cfg.offerDays).length});
+function secCard(s){const a=secAlerts(s.items);return `<button class="card t" onclick="openSec('${encodeURIComponent(s.key)}')"><div class="row"><div style="font-size:30px">📂</div><div class="grow"><div class="big">${esc(s.name)}</div><div class="mut">${s.items.length} ${s.items.length===1?'producto':'productos'}</div></div><div style="text-align:right">${a.stock?`<div class="tag" style="background:var(--y)">🔴 ${a.stock} stock</div>`:''}${a.venc?`<div class="tag" style="background:var(--y)">⏰ ${a.venc} vence</div>`:''}</div></div></button>`}
+function openSec(k){psec=decodeURIComponent(k);render();scrollTo(0,0)}
+function secList(){const L=sectores();
+ return `<button class="btn" onclick="newSecForm()">➕ NUEVO SECTOR</button>${L.map(secCard).join('')||'<div class="empty">Todavía no hay productos. Creá un sector para empezar.</div>'}`}
+function secView(){const s=sectores().find(x=>x.key===psec);if(!s){psec=null;return secList()}
+ return `<button class="btn s" onclick="psec=null;render();scrollTo(0,0)">← VOLVER A LOS SECTORES</button><h2 style="margin-top:12px">📂 ${esc(s.name)} <span class="mut" style="font-size:15px">· ${s.items.length} ${s.items.length===1?'producto':'productos'}</span></h2><button class="btn" onclick="editProd(0,false,'',${JSON.stringify(s.key?s.name:'').replace(/"/g,'&quot;')})">➕ AGREGAR PRODUCTO A ESTE SECTOR</button>${s.items.slice().sort((a,b)=>a.name.localeCompare(b.name,'es')).map(p=>pcard(p)).join('')}${s.key?'<button class="btn s" onclick="renSecForm()">✏️ CAMBIAR NOMBRE DEL SECTOR</button>':''}`}
+function newSecForm(){sheet(`<h2>➕ Nuevo sector</h2><label>Nombre del sector (ej: Fideos, Harina, Gaseosas)</label><input id="sn" class="bigin" placeholder="Nombre del sector"><p class="mut">El sector aparece en la lista cuando cargás su primer producto.</p><button class="btn" onclick="newSec()">SEGUIR: AGREGAR PRODUCTO</button><button class="btn s" onclick="closeSheet()">Cancelar</button>`)}
+function newSec(){const n=String($('#sn').value||'').trim();if(!n)return toast('Escribí el nombre del sector');
+ const ex=sectores().find(s=>s.key===secKey(n));if(ex){psec=ex.key;closeSheet();return toast('Ese sector ya existe: '+ex.name)}
+ psec=secKey(n);editProd(0,false,'',n)}
+function renSecForm(){const s=sectores().find(x=>x.key===psec);if(!s)return;sheet(`<h2>✏️ Cambiar nombre del sector</h2><label>Nombre nuevo</label><input id="sn" class="bigin" value="${esc(s.name)}"><p class="mut">Se cambia en los ${s.items.length} productos de este sector.</p><button class="btn" onclick="renSec()">GUARDAR</button><button class="btn s" onclick="closeSheet()">Cancelar</button>`)}
+function renSec(){const n=String($('#sn').value||'').trim(),s=sectores().find(x=>x.key===psec);if(!n||!s)return toast('Escribí el nombre del sector');
+ if(secKey(n)!==s.key&&sectores().some(x=>x.key===secKey(n)))return toast('Ya existe un sector con ese nombre');
+ s.items.forEach(p=>{p.cat=n});log('Cambió el nombre de un sector',s.name,s.name,n);psec=secKey(n);save();closeSheet()}
 
 // Vencimientos por lote: un producto puede tener VARIAS fechas (distintos lotes). Se guardan dentro del producto (p.lots),
 // por eso no hace falta cambiar la base de datos. p.venc queda siempre con la fecha MÁS PRÓXIMA: así las alertas, Inicio y los avisos siguen igual.
