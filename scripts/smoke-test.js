@@ -208,8 +208,24 @@ delete vals['#sqc'];
  q='tall';ok(plist().includes('Fideos Tallarín')&&!plist().includes('📂'),'la búsqueda sigue funcionando en toda la lista');q='';
  vals['#sn']='Pastas';renSec();ok(db.prod.filter(p=>p.cat==='Pastas').length===2&&psec==='pastas'&&!db.prod.some(p=>p.cat==='fideos'||p.cat==='Fideos'),'cambiar nombre del sector lo cambia en sus productos');
  psec=null}
+// --- cigarrillos: conteo diario ---
+{ok(NAV.some(n=>n[2]==='Cigarrillos'&&n[0]==='cig')&&menu().includes('Cigarrillos'),'Cigarrillos está en el menú');
+ ok(cigPage().includes('Para qué sirve esta sección')&&cigPage().includes('AGREGAR MARCA'),'la sección explica para qué sirve');
+ Object.assign(vals,{'#cn':'Marlboro Box','#cp':'3.000','#ci':'20'});cigAdd();Object.assign(vals,{'#cn':'Lucky','#cp':'2500','#ci':'10'});cigAdd();Object.assign(vals,{'#cn':'lucky','#cp':'1','#ci':''});cigAdd();
+ const ma=db.prod.find(x=>x.name==='Marlboro Box'),lu=db.prod.find(x=>x.name==='Lucky');
+ ok(cigList().length===2&&ma.stock===20&&lu.stock===10&&ma.cat==='Cigarrillos'&&ma.price===3000,'se cargan las marcas con su stock y precio (sin repetir)');
+ ok(cigPage().includes('Hay en la app: <b>20</b>')&&cigPage().includes('Marlboro Box'),'el conteo muestra el número esperado');
+ stockMove(ma,30,'Mercadería recibida','Prov');
+ CQ={};CQ[ma.id]='25';CQ[lu.id]='8';CAP='15.000';cigSave();
+ ok(ma.stock===25&&lu.stock===8&&ma.conteos[0].vend===5&&lu.conteos[0].vend===2,'vendidos = esperado − contado (considera la mercadería que entró)');
+ {const t=cigTot(cigSes()[0]);ok(t.vend===7&&t.esp===20000&&t.res===-5000,'total vendido, plata que debería haber y diferencia con lo apartado');
+  ok(cigSum(cigSes()[0],true).includes('Faltan')&&cigSum(cigSes()[0],true).includes('$20.000'),'avisa cuánto falta')}
+ CQ={};CQ[lu.id]='12';CAP='';cigSave();ok(lu.stock===12&&lu.conteos[0].vend===0&&lu.conteos[0].dif===4&&cigSum(cigSes()[0],true).includes('más de lo esperado'),'si contás de más, no inventa ventas y avisa');
+ CQ={};cigSave();ok(true,'conteo vacío no rompe');
+ ok(db.log.some(l=>l.act==='Conteo de cigarrillos')&&ma.smov.some(m=>m.motivo==='Conteo de cigarrillos'),'queda en el historial');
+ ok(cigPage().includes('Último conteo')&&cigPage().includes('Conteos anteriores'),'muestra el último conteo y los anteriores')}
 logout();splash=true;login();splash=false;authView='reg';login();authView='forgot';fpStep=1;login();authView='login';login();
 // --- persistencia: recargar = leer lo guardado ---
-const re=Store.load();ok(re.prod.length===9&&re.users.length===2&&re.log.length>20,'los datos sobreviven a recargar');
+const re=Store.load();ok(re.prod.length===11&&re.users.length===2&&re.log.length>20,'los datos sobreviven a recargar');
 `;
 new Function('return (async()=>{'+js+'\n'+test+'})()')().then(()=>{console.log('Prueba OK');process.exit(0)}).catch(e=>{console.error('FALLÓ:',e.message,process.env.DBG?e.stack:'');process.exit(1)});

@@ -6,6 +6,7 @@ function page(){
  if(view==='stock')return stockPage();
  if(view==='trash')return trashPage();
  if(view==='prod')return prodPage();
+ if(view==='cig')return cigPage();
  if(view==='venc')return vencPage();
  if(view==='alert')return alertPage();
  if(view==='hist')return histPage();

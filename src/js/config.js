@@ -7,4 +7,4 @@ gastos:{t:'Gastos',i:'🛒',f:[['con','Concepto'],['amt','Importe','num'],['date
 notas:{t:'Notas',i:'📝',f:[['txt','Nota','area']],line:x=>[x.txt,x.u+' · '+fd(x.date)+' '+x.h]}
 };
 // Pagos diarios e Historial & Memoria ya no están en el menú: siguen existiendo y se abren desde las tarjetas de Inicio (go('pagos') / go('hist')).
-const NAV=[['home','🏠','Inicio'],['jornada','📅','Jornada diaria'],['merc','📦','Mercadería recibida'],['sup','🚚','Proveedores'],['ped','📋','Pedidos'],['notas','📝','Notas'],['venc','⏰','Vencimientos'],['alert','🔔','Alertas'],['prod','🏷️','Productos'],['stock','📦','Control de stock'],['trash','🗑️','Papelera'],['users','👥','Usuarios'],['config','⚙️','Configuración'],['perfil','👤','Perfil']];
+const NAV=[['home','🏠','Inicio'],['jornada','📅','Jornada diaria'],['merc','📦','Mercadería recibida'],['sup','🚚','Proveedores'],['ped','📋','Pedidos'],['notas','📝','Notas'],['venc','⏰','Vencimientos'],['alert','🔔','Alertas'],['prod','🏷️','Productos'],['cig','🚬','Cigarrillos'],['stock','📦','Control de stock'],['trash','🗑️','Papelera'],['users','👥','Usuarios'],['config','⚙️','Configuración'],['perfil','👤','Perfil']];
