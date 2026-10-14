@@ -42,7 +42,7 @@ function scanForForm(){scanBarcode(code=>{const inp=$('#f_barcode'),m=$('#bcm'),
  if(EDP){const p=db.prod.find(x=>x.id===EDP);if(p&&p.barcode!==code){log('Asoció código de barras',p.name,p.barcode||'—',code);p.barcode=code;save()}}
  if(m)m.textContent=EDP?'✅ Código guardado en la ficha.':'✅ Código leído. Completá la ficha y tocá Guardar.'})}
 // Escaneo desde Productos: abre la ficha o ofrece crear el producto.
-function scanProducts(){scanBarcode(code=>{const p=findByCode(code);if(p)return editProd(p.id);
+function scanProducts(){scanBarcode(code=>{const p=findByCode(code);if(p)return stockQuick(p.id);
  sheet(`<h2>Producto no encontrado</h2><div class="card">Código detectado: <b>${esc(code)}</b><div class="mut">Todavía no hay un producto con este código.</div></div><button class="btn big" onclick="editProd(0,false,'${esc(code)}')">CREAR NUEVO PRODUCTO</button><button class="btn s" onclick="closeSheet()">Volver</button>`)})}
 function scErr(e){const n=e&&e.name,fr=window.top!==window.self;
  if(n==='NotAllowedError'||n==='SecurityError')return 'No hay permiso para usar la cámara. Puede ser que no lo hayas permitido (tocá el candado o los ajustes del navegador junto a la dirección → Cámara → Permitir y volvé a tocar ESCANEAR)'+(fr?', o que la app esté abierta dentro de otra página (como Claude), que bloquea la cámara: abrila en su propia pestaña.':'.')+' Mientras tanto podés escribir el código abajo.';

@@ -1,8 +1,6 @@
 // Calculadora del día (en Pedidos). SUMA SOLA el importe de los pedidos que se anotaron ese día: no hay que cargar nada a mano.
 // Opcional: importes sueltos (tabla calc_entries), ligados a la fecha de la jornada, que se suman al total.
-const moneyC=n=>'$'+Number(n||0).toLocaleString('es-AR',{minimumFractionDigits:2,maximumFractionDigits:2});
-// Acepta formato argentino: 1500 · 1.500 · 1.500,50 · 1500,5
-const parseAR=s=>{s=String(s==null?'':s).replace(/[\s$]/g,'');if(!s)return NaN;if(s.includes(','))s=s.replace(/\./g,'').replace(',','.');else if(/^\d{1,3}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');return /^\d+(\.\d+)?$/.test(s)?Math.round(Number(s)*100)/100:NaN};
+const moneyC=money;
 let calcDay=null;
 const calcDate=()=>calcDay||iso();
 const calcItems=()=>db.calc.filter(x=>x.date===calcDate()).sort((a,b)=>a.id-b.id);

@@ -10,7 +10,16 @@ const save=()=>Store.save(db);
 const iso=(d=new Date())=>{const z=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+z(d.getMonth()+1)+'-'+z(d.getDate())};
 const fd=s=>s?s.split('-').reverse().join('/'):'—';
 const hm=()=>new Date().toTimeString().slice(0,5);
-const money=n=>'$'+Number(n||0).toLocaleString('es-AR');
+// Dinero argentino. money() muestra $14.000 / $14.500,50. parseAR() entiende lo que escribe la persona:
+// 14000 · 14.000 · 14,000 (catorce mil) · 14.500,50 · 1500,5 · 0,125. Nunca agrega ceros delante.
+const money=n=>'$'+Number(n||0).toLocaleString('es-AR',{maximumFractionDigits:2,useGrouping:'always'});
+const parseAR=s=>{s=String(s==null?'':s).replace(/[\s$]/g,'');if(!s)return NaN;
+ if(s.includes(',')&&s.includes('.')){s=s.lastIndexOf(',')>s.lastIndexOf('.')?s.replace(/\./g,'').replace(',','.'):s.replace(/,/g,'')}
+ else if(s.includes(',')){s=/^[1-9]\d{0,2}(,\d{3})+$/.test(s)?s.replace(/,/g,''):s.replace(',','.')}
+ else if(/^[1-9]\d{0,2}(\.\d{3})+$/.test(s))s=s.replace(/\./g,'');
+ return /^\d+(\.\d+)?$/.test(s)?Math.round(Number(s)*100)/100:NaN};
+const numVal=s=>{const n=parseAR(s);return isNaN(n)?0:n};
+const numIn=v=>v==null||v===''?'':String(v).replace('.',',');
 const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
 const dev=()=>{const u=navigator.userAgent;return (/iPhone|iPad/.test(u)?'iOS':/Android/.test(u)?'Android':'PC')+' · '+(screen.width+'x'+screen.height)};
 let _lastId=0;
