@@ -192,6 +192,10 @@ delete vals['#sqc'];
  b2.amt=9500;ok(Math.round(calcPedTotal()*100)===Math.round((t0+24500)*100),'si se modifica un pedido, el total se actualiza');
  softDelete('ped',a.id);ok(Math.round(calcPedTotal()*100)===Math.round((t0+9500)*100)&&db.trash.some(t=>t.coll==='ped'),'un pedido en papelera deja de sumar');
  ok(calcCard().includes('TOTAL DEL DÍA'),'la calculadora muestra el total')}
+// --- el precio nuevo no arranca con un 0 delante ---
+{const f=field(['price','Precio normal','num'],0);ok(f.includes('value=""')&&f.includes('placeholder="0"'),'un precio vacío no muestra 0');
+ const g=field(['price','Precio normal','num'],14500.5);ok(g.includes('value="14500,5"'),'un precio cargado se muestra tal cual');
+ Object.assign(vals,{'#f_price':'14000'});ok(val(['price','Precio','num'])===14000,'14000 se guarda como 14000 (sin 0 delante)')}
 // --- productos por sectores ---
 {q='';psec=null;mkP({name:'Fideos Tallarín',price:900,stock:10,cat:'Fideos'});
  mkP({name:'Fideos Moñitos',price:950,stock:8,cat:'fideos'});
