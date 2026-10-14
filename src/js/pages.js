@@ -54,7 +54,7 @@ const supCard=x=>`<div class="card t"><div onclick="editCol('sup',${x.id})" styl
 function prodPage(){return `<h2>🏷️ Productos</h2><button class="btn big" onclick="scanProducts()">📷 ESCANEAR CÓDIGO DE BARRAS</button><input class="bigin" placeholder="🔍 Buscar producto por nombre o código" oninput="q=this.value;$('#pl').innerHTML=plist()" value="${esc(q)}"><button class="btn" style="margin-top:12px" onclick="editProd(0)">AGREGAR PRODUCTO MANUALMENTE</button><div id="pl">${plist()}</div>`}
 let q='',aq='';
 const matchP=(p,t)=>{t=t.trim().toLowerCase();return !t||[p.name,p.brand].some(x=>String(x||'').toLowerCase().includes(t))||String(p.barcode||'').includes(t)};
-const plist=()=>db.prod.filter(p=>matchP(p,q)).map(p=>pcard(p)).join('')||'<div class="empty">Sin resultados.</div>';
+const plist=()=>String(q||'').trim()?(db.prod.filter(p=>matchP(p,q)).map(p=>pcard(p)).join('')||'<div class="empty">Sin resultados.</div>'):psec===null?secList():secView();
 function aumList(){const t=aq.trim().toLowerCase();
  if(!t){const au=aumentosHoy();return (au.slice(0,5).map(priceCard).join('')||'<div class="mut" style="margin:8px 0">Hoy no se registraron aumentos.</div>')+(au.length>5?`<button class="btn s" onclick="go('alert')">Ver los ${au.length} aumentos</button>`:'')}
  return db.alerts.filter(a=>a.nw>a.old).filter(a=>{const p=prodOf(a);return [a.name,p.brand].some(x=>String(x||'').toLowerCase().includes(t))||String(p.barcode||'').includes(t)}).map(priceCard).join('')||'<div class="mut" style="margin:8px 0">No hay aumentos para esa búsqueda.</div>'}

@@ -189,3 +189,6 @@ Cómo ejecutarla: Supabase → **SQL Editor** → **New query** → pegar el con
 - **Menú**: "Pagos diarios" e "Historial & Memoria" ya no están en el menú; siguen funcionando desde las tarjetas de Inicio y no se borró ningún dato.
 - **Importes** (`src/js/data.js`): `money()` muestra `$14.000` / `$14.500,50`; `parseAR()` entiende `14000`, `14.000`, `14,000` (catorce mil), `14.500,50`. Los campos de importe ahora son de texto decimal (antes `type=number`, que dependía del idioma del teléfono).
 - **Migración 001_calc_entries.sql**: la calculadora ya suma sola desde los pedidos; la tabla solo sirve para "importes sueltos" opcionales. No es necesaria para el funcionamiento normal (no se eliminó). No hay migraciones nuevas.
+
+## Productos por sectores
+`src/js/sectores.js`: Productos muestra primero los sectores (Fideos, Harina, Gaseosas…) con la cantidad de productos y avisos de stock/vencimiento; al entrar a uno se ven sus productos y se pueden agregar nuevos ya dentro de ese sector. El sector es el campo "Sector" (antes "Categoría") que ya existía en cada producto: no hay migración ni tablas nuevas. Los productos sin sector aparecen en "Sin sector". La búsqueda sigue mostrando todos los productos.

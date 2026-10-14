@@ -43,7 +43,7 @@ await Auth.requestReset('cami@email.com');db.resets[0].exp=1;ok(!(await Auth.ver
 ok(!can('users')&&!can('purge')&&can('del')&&can('date'),'permisos usuaria');
 view='users';ok(page().includes('Solo la administradora'),'usuarias no administran usuarios');
 // --- productos: guardar, persistir, duplicados ---
-const mkP=o=>{Object.assign(vals,{'#f_name':o.name,'#f_barcode':o.code||'','#f_cat':'','#f_sup':o.sup||'','#f_price':String(o.price||100),'#f_unit':'','#f_disc':'0','#f_stock':String(o.stock||0),'#f_min':String(o.min||0),'#f_venc':o.venc||'','#f_emoji':''});saveProd(0)};
+const mkP=o=>{Object.assign(vals,{'#f_name':o.name,'#f_barcode':o.code||'','#f_cat':o.cat||'','#f_sup':o.sup||'','#f_price':String(o.price||100),'#f_unit':'','#f_disc':'0','#f_stock':String(o.stock||0),'#f_min':String(o.min||0),'#f_venc':o.venc||'','#f_emoji':''});saveProd(0)};
 mkP({name:'Papa',price:2000,stock:40,code:'7791234567890'});mkP({name:'Salchichas',price:3000,stock:3,min:5});mkP({name:'Yogur',price:1200,stock:0,venc:iso(new Date(Date.now()+5*864e5))});
 ok(db.prod.length===3&&Store.load().prod.length===3,'productos guardados y persistentes');ok(db.prod[0].emoji==='🥔','imagen por nombre');
 mkP({name:'Otro',code:'7791234567890'});ok(db.prod.length===3&&TOASTS.some(t=>t.includes('ya está registrado')),'código duplicado');
@@ -192,8 +192,20 @@ delete vals['#sqc'];
  b2.amt=9500;ok(Math.round(calcPedTotal()*100)===Math.round((t0+24500)*100),'si se modifica un pedido, el total se actualiza');
  softDelete('ped',a.id);ok(Math.round(calcPedTotal()*100)===Math.round((t0+9500)*100)&&db.trash.some(t=>t.coll==='ped'),'un pedido en papelera deja de sumar');
  ok(calcCard().includes('TOTAL DEL DÍA'),'la calculadora muestra el total')}
+// --- productos por sectores ---
+{q='';psec=null;mkP({name:'Fideos Tallarín',price:900,stock:10,cat:'Fideos'});
+ mkP({name:'Fideos Moñitos',price:950,stock:8,cat:'fideos'});
+ Object.assign(vals,{'#f_name':'Harina 000','#f_barcode':'','#f_cat':'Harina','#f_sup':'','#f_price':'800','#f_unit':'','#f_disc':'0','#f_stock':'5','#f_min':'0','#f_venc':'','#f_emoji':''});saveProd(0);
+ const S=sectores(),fi=S.find(x=>x.key==='fideos');ok(fi&&fi.items.length===2&&S.some(x=>x.key==='harina')&&S.some(x=>x.key===''),'agrupa los productos por sector (sin importar mayúsculas)');
+ const g=prodPage();ok(g.includes('NUEVO SECTOR')&&g.includes('Fideos')&&g.includes('2 productos')&&g.includes('Harina')&&!g.includes('Fideos Tallarín'),'Productos muestra primero los sectores con su cantidad');
+ openSec(encodeURIComponent('fideos'));const v=prodPage();ok(v.includes('Fideos Tallarín')&&v.includes('Fideos Moñitos')&&!v.includes('Harina 000')&&v.includes('AGREGAR PRODUCTO A ESTE SECTOR'),'dentro del sector se ven solo sus productos');
+ {const sho=sheet;let last='';sheet=h=>{last=h};editProd(0,false,'','Fideos');ok(last.includes('value="Fideos"'),'agregar dentro de un sector lo deja preseleccionado');
+  newSecForm();ok(last.includes('Nuevo sector'),'formulario de nuevo sector');sheet=sho}
+ q='tall';ok(plist().includes('Fideos Tallarín')&&!plist().includes('📂'),'la búsqueda sigue funcionando en toda la lista');q='';
+ vals['#sn']='Pastas';renSec();ok(db.prod.filter(p=>p.cat==='Pastas').length===2&&psec==='pastas'&&!db.prod.some(p=>p.cat==='fideos'||p.cat==='Fideos'),'cambiar nombre del sector lo cambia en sus productos');
+ psec=null}
 logout();splash=true;login();splash=false;authView='reg';login();authView='forgot';fpStep=1;login();authView='login';login();
 // --- persistencia: recargar = leer lo guardado ---
-const re=Store.load();ok(re.prod.length===6&&re.users.length===2&&re.log.length>20,'los datos sobreviven a recargar');
+const re=Store.load();ok(re.prod.length===9&&re.users.length===2&&re.log.length>20,'los datos sobreviven a recargar');
 `;
 new Function('return (async()=>{'+js+'\n'+test+'})()')().then(()=>{console.log('Prueba OK');process.exit(0)}).catch(e=>{console.error('FALLÓ:',e.message,process.env.DBG?e.stack:'');process.exit(1)});
