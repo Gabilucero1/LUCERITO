@@ -98,7 +98,7 @@ sesSheet();killSess(cs);sid=cs;ok(!sessAlive(),'cerrar sesión ajena');sid=null;
 delUser('cami');askYes();ok(!db.users.some(u=>u.id==='cami')&&db.trash.some(t=>t.coll==='users'),'eliminar usuario');
 restoreT(db.trash.find(t=>t.coll==='users').tid);ok(db.users.some(u=>u.id==='cami'),'restaurar usuario');
 // --- calculadora del día, vencimientos por lote y nombres del menú ---
-ok(NAV.some(n=>n[2]==='Pagos diarios')&&!NAV.some(n=>n[2]==='Pagos'||n[0]==='gastos'||n[2]==='Gastos'),'menú: Pagos diarios y sin Gastos');
+ok(!NAV.some(n=>n[2]==='Pagos diarios')&&!NAV.some(n=>n[2]==='Pagos'||n[0]==='gastos'||n[2]==='Gastos'),'menú: sin Pagos diarios ni Gastos');
 view='home';ok(!/Gastos/.test(home())&&home().includes('Pagos diarios hoy'),'Inicio sin Gastos');ok(!/Gastos/.test(jornada())&&jornada().includes('Pagos diarios'),'Jornada sin Gastos');
 view='pagos';ok(page().includes('Pagos diarios'),'título Pagos diarios');ok(COL.gastos&&Array.isArray(db.gastos),'los datos de Gastos se conservan');
 ok(parseAR('1.500,50')===1500.5&&parseAR('1.500')===1500&&parseAR('1500,5')===1500.5&&parseAR('1500')===1500&&isNaN(parseAR('abc'))&&isNaN(parseAR('-5')),'importes en formato argentino');
@@ -160,8 +160,40 @@ me=db.users.find(u=>u.id==='cami');view='perfil';h=page();ok((h.match(/CERRAR SE
 Object.assign(vals,{'#pn':'Cami','#pl':'Z'});saveMe();ok(me.last==='Z','editar perfil propio');
 Object.assign(vals,{'#rq':'users','#rn':'x'});sendReq();me=db.users.find(u=>u.admin);resReq(db.reqs[0].id,1);ok(db.reqs[0].st==='Aprobada','solicitud de permiso');
 // --- login y registro se dibujan ---
+// --- formato de importes argentino ---
+ok(parseAR('14000')===14000&&parseAR('14.000')===14000&&parseAR('14,000')===14000&&parseAR('14.500,50')===14500.5&&parseAR('014000')===14000&&parseAR('1,5')===1.5&&parseAR('14,50')===14.5&&parseAR('0,125')===0.13&&parseAR('1.234.567')===1234567,'parseAR: 14000 · 14.000 · 14,000 · 14.500,50');
+ok(money(14000)==='$14.000'&&money(1500)==='$1.500'&&money(14500.5)==='$14.500,5'&&money(0)==='$0'&&!money(14000).includes('014'),'money: formato argentino sin ceros delante');
+ok(numIn(14500.5)==='14500,5'&&numVal('14,000')===14000&&numVal('')===0,'campos de importe');
+Object.assign(vals,{'#f_price':'14,000','#f_disc':'0'});ok(val(['price','Precio','num'])===14000,'el campo de precio entiende 14,000');
+// --- control rápido de stock: SALIDA/ENTRADA, aviso inmediato, escaneo ---
+mkP({name:'Coca Cola 2,25 L',price:3500,stock:6,min:4,code:'7790001112223'});
+const coca=db.prod.find(x=>x.name==='Coca Cola 2,25 L');vals['#sqc']='1';
+qmove(coca.id,-1);ok(coca.stock===5&&stockState(coca)==='ok'&&!stockAlerts().includes(coca),'6 → 5 sigue normal');
+qmove(coca.id,-1);ok(coca.stock===4&&stockState(coca)==='bajo'&&stockAlerts().includes(coca)&&stockTag(coca).includes('STOCK BAJO'),'al llegar al mínimo avisa 🔴 STOCK BAJO enseguida');
+stab='bajo';ok(stockHome().includes('CON STOCK BAJO')&&stockPage().includes('Coca Cola'),'aparece en las alertas de reponer');
+qmove(coca.id,-1);qmove(coca.id,-1);qmove(coca.id,-1);ok(coca.stock===1,'baja de a una unidad');qmove(coca.id,-1);ok(coca.stock===0&&stockState(coca)==='sin'&&stockTag(coca).includes('SIN STOCK'),'0 → 🚨 SIN STOCK');
+qmove(coca.id,-1);ok(coca.stock===0,'no baja de 0');
+vals['#sqc']='12';qmove(coca.id,1);ok(coca.stock===12&&stockState(coca)==='ok'&&!stockAlerts().includes(coca),'ENTRADA +12 y desaparece el aviso');
+ok(coca.smov[0].motivo==='Entrada rápida'&&db.log.some(l=>l.act==='Modificó stock'&&l.detail.includes('Entrada rápida')),'los movimientos quedan en el historial');
+delete vals['#sqc'];
+{const sbo=scanBarcode,sho=sheet;let last='';sheet=h=>{last=h};scanBarcode=cb=>cb('7790001112223');scanProducts();
+ ok(last.includes('STOCK ACTUAL')&&last.includes('Coca Cola')&&last.includes('➖ SALIDA')&&last.includes('ENTRADA ➕'),'escanear un producto existente muestra stock y SALIDA/ENTRADA');
+ scanBarcode=cb=>cb('999999999');scanProducts();ok(last.includes('CREAR NUEVO PRODUCTO'),'código nuevo: sigue ofreciendo crear el producto');
+ editProd(coca.id);ok(last.includes('STOCK ACTUAL')&&last.includes('id="f_name"')&&last.includes('GUARDAR'),'la ficha completa sigue y suma el control rápido');
+ scanBarcode=sbo;sheet=sho}
+// --- menú: Pagos diarios / Historial & Memoria fuera del menú, datos y pantallas intactos ---
+{const m=menu();ok(!m.includes('Pagos diarios')&&!m.includes('Historial')&&!m.includes('Memoria')&&m.includes('Pedidos')&&m.includes('Productos'),'menú sin Pagos diarios, Historial ni Memoria');
+ const h=home();ok(h.includes('Pagos diarios hoy')&&h.includes('Historial'),'Inicio conserva sus resúmenes');
+ ok(histPage().includes('Historial')&&db.log.length>20&&Array.isArray(db.pagos),'historial y pagos siguen funcionando y guardando');
+ ok(colPage('pagos').includes('Pagos diarios'),'la pantalla de Pagos diarios sigue existiendo')}
+// --- calculadora: total derivado de los pedidos ---
+{calcDay=null;const t0=calcPedTotal(),a={id:nid(),sup:'Prov A',amt:15000,date:'',st:'Agregado',cd:iso(),u:'x',h:'00:00'},b2={id:nid(),sup:'Prov B',amt:8500,date:'',st:'Agregado',cd:iso(),u:'x',h:'00:00'},o={id:nid(),sup:'Prov C',amt:5000,date:'',st:'Agregado',cd:'2020-01-01',u:'x',h:'00:00'};
+ db.ped.push(a,b2,o);ok(Math.round(calcPedTotal()*100)===Math.round((t0+23500)*100),'total = suma de los pedidos del día (otras fechas no se mezclan)');
+ b2.amt=9500;ok(Math.round(calcPedTotal()*100)===Math.round((t0+24500)*100),'si se modifica un pedido, el total se actualiza');
+ softDelete('ped',a.id);ok(Math.round(calcPedTotal()*100)===Math.round((t0+9500)*100)&&db.trash.some(t=>t.coll==='ped'),'un pedido en papelera deja de sumar');
+ ok(calcCard().includes('TOTAL DEL DÍA'),'la calculadora muestra el total')}
 logout();splash=true;login();splash=false;authView='reg';login();authView='forgot';fpStep=1;login();authView='login';login();
 // --- persistencia: recargar = leer lo guardado ---
-const re=Store.load();ok(re.prod.length===5&&re.users.length===2&&re.log.length>20,'los datos sobreviven a recargar');
+const re=Store.load();ok(re.prod.length===6&&re.users.length===2&&re.log.length>20,'los datos sobreviven a recargar');
 `;
-new Function('return (async()=>{'+js+'\n'+test+'})()')().then(()=>{console.log('Prueba OK');process.exit(0)}).catch(e=>{console.error('FALLÓ:',e.message);process.exit(1)});
+new Function('return (async()=>{'+js+'\n'+test+'})()')().then(()=>{console.log('Prueba OK');process.exit(0)}).catch(e=>{console.error('FALLÓ:',e.message,process.env.DBG?e.stack:'');process.exit(1)});

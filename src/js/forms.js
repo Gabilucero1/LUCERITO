@@ -5,10 +5,10 @@ function field(f,v){const [k,l,t,o]=f;let h=`<label>${l}</label>`;
  else if(t==='barcode')h+=`<button type="button" class="btn big" onclick="scanForForm()">📷 ESCANEAR CÓDIGO DE BARRAS</button><input id="f_barcode" class="bigin" inputmode="numeric" placeholder="O escribí el código" value="${esc(v)}"><div id="bcm" class="mut"></div>`;
  else if(t==='pedsel')h+=`<select id="f_ped"><option value="0">Sin pedido</option>${db.ped.filter(x=>x.st!=='Recibido'||x.id===Number(v)).map(x=>`<option value="${x.id}" ${x.id===Number(v)?'selected':''}>${esc(x.sup)} — ${fd(x.date)} — ${money(x.amt)}</option>`).join('')}</select>`;
  else if(t==='sup'){const L=db.sup.map(s=>s.name);if(v&&!L.some(n=>n.toLowerCase()===String(v).toLowerCase()))L.push(v);h+=`<select id="f_${k}" onchange="supSel(this)"><option value="">— Elegí un proveedor —</option>${L.map(n=>`<option value="${esc(n)}" ${n===v?'selected':''}>${esc(n)}</option>`).join('')}<option value="__new__">+ Agregar nuevo proveedor</option></select><input id="f_${k}new" class="bigin" style="display:none" placeholder="Nombre del nuevo proveedor">`}
- else h+=`<input ${t==='date'&&ED&&!can('date')?'disabled title="Solo la administradora puede cambiar la fecha"':''} id="f_${k}" type="${t==='num'?'number':t==='date'?'date':'text'}" ${t==='num'?'inputmode="decimal"':''} value="${esc(v)}">`;
+ else h+=`<input ${t==='date'&&ED&&!can('date')?'disabled title="Solo la administradora puede cambiar la fecha"':''} id="f_${k}" type="${t==='date'?'date':'text'}" ${t==='num'?'inputmode="decimal"':''} value="${esc(t==='num'?numIn(v):v)}">`;
  if(t==='date'&&ED&&!can('date'))h+='<button type="button" class="btn s" onclick="reqSheet(\'date\')">🔒 SOLICITAR PERMISO para cambiar la fecha</button>';
  return h}
-const val=(f)=>{if(f[2]==='sup')return supName(f[0]);const e=$('#f_'+f[0]);return f[2]==='num'||f[2]==='pedsel'?Number(e.value||0):e.value.trim()};
+const val=(f)=>{if(f[2]==='sup')return supName(f[0]);const e=$('#f_'+f[0]);return f[2]==='num'?numVal(e.value):f[2]==='pedsel'?Number(e.value||0):e.value.trim()};
 let ED=false;function editCol(k,id,pre){if(k==='merc')return mercForm(id);ED=!!id;const c=COL[k];const x=id?db[k].find(y=>y.id===id):{date:k==='ped'?'':iso(),st:k==='ped'?'Agregado':'En camino',met:'Efectivo',...(pre||{})};
  sheet(`<h2>${c.i} ${id?'Editar':'Nuevo'}</h2>${c.f.map(f=>field(f,x[f[0]]??'')).join('')}${k==='sup'&&id?supHist(x.name):''}<button class="btn" onclick="saveCol('${k}',${id})">Guardar</button>${id&&!can('del')?'<button class="btn s" onclick="reqSheet(\'del\')">🔒 SOLICITAR PERMISO para eliminar</button>':''}${id&&can('del')?`<button class="btn d" onclick="delCol('${k}',${id})">🗑️ ELIMINAR</button>`:''}<button class="btn s" onclick="closeSheet()">Cancelar</button>`)}
 function saveCol(k,id){const c=COL[k];const vals={};c.f.forEach(f=>vals[f[0]]=val(f));
@@ -24,11 +24,11 @@ const PF=[['name','Nombre'],['barcode','Código de barras','barcode'],['cat','Ca
 function editProd(id,pick,pre){ED=false;EDP=id||0;
  if(pick&&!id){sheet(`<h2>Elegí el producto</h2>${db.prod.map(p=>`<button class="card t" onclick="editProd(${p.id})">${esc(p.emoji)} ${esc(p.name)}</button>`).join('')}<button class="btn s" onclick="closeSheet()">Cancelar</button>`);return}
  const p=id?db.prod.find(x=>x.id===id):{price:0,disc:0,stock:0,min:0,emoji:'🏷️',barcode:pre||''};
- sheet(`<h2>${id?esc(p.name):'Producto nuevo'}</h2>${!id&&pre?`<div class="card">Código detectado: <b>${esc(pre)}</b></div>`:''}${PF.map(f=>field(f,p[f[0]]??'')).join('')}<div class="card" style="margin-top:12px">Precio oferta: <b id="po">${money(offer(p))}</b></div>
+ sheet(`<h2>${id?esc(p.name):'Producto nuevo'}</h2>${!id&&pre?`<div class="card">Código detectado: <b>${esc(pre)}</b></div>`:''}${id?stockQuickBlock(p):''}${PF.map(f=>field(f,p[f[0]]??'')).join('')}<div class="card" style="margin-top:12px">Precio oferta: <b id="po">${money(offer(p))}</b></div>
  ${id?stockHist(p):''}
  ${id&&p.hist.length?`<label>Historial de precios</label>${p.hist.slice().reverse().map(h=>`<div class="mut">${fd(h.d)} ${h.h} · ${money(h.old)} → ${money(h.nw)} (${esc(h.u)})</div>`).join('')}`:''}
  <button class="btn" onclick="saveProd(${id})">${id?'GUARDAR':'GUARDAR PRODUCTO'}</button>${id&&!can('del')?'<button class="btn s" onclick="reqSheet(\'del\')">🔒 SOLICITAR PERMISO para eliminar</button>':''}${id&&can('del')?`<button class="btn d" onclick="delProd(${id})">🗑️ ELIMINAR PRODUCTO</button>`:''}<button class="btn s" onclick="closeSheet()">Cancelar</button>`);
- ['f_price','f_disc'].forEach(i=>$('#'+i).oninput=()=>$('#po').textContent=money(Math.round(Number($('#f_price').value||0)*(1-Number($('#f_disc').value||0)/100))));
+ ['f_price','f_disc'].forEach(i=>$('#'+i).oninput=()=>$('#po').textContent=money(Math.round(numVal($('#f_price').value)*(1-numVal($('#f_disc').value)/100))));
 }
 let newImg=null;
 function pimg(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{const im=new Image();im.onload=()=>{const c=document.createElement('canvas');c.width=c.height=120;const x=c.getContext('2d');const s=Math.min(im.width,im.height);x.drawImage(im,(im.width-s)/2,(im.height-s)/2,s,s,0,0,120,120);newImg=c.toDataURL('image/jpeg',.7)};im.src=r.result};r.readAsDataURL(f)}

@@ -6,4 +6,5 @@ pagos:{t:'Pagos diarios',one:'pago diario',i:'💳',f:[['sup','Proveedor','sup']
 gastos:{t:'Gastos',i:'🛒',f:[['con','Concepto'],['amt','Importe','num'],['date','Fecha','date'],['note','Nota (opcional)','area']],line:x=>[x.con+' — '+money(x.amt),fd(x.date)+' · '+x.u],sort:'date'},
 notas:{t:'Notas',i:'📝',f:[['txt','Nota','area']],line:x=>[x.txt,x.u+' · '+fd(x.date)+' '+x.h]}
 };
-const NAV=[['home','🏠','Inicio'],['jornada','📅','Jornada diaria'],['merc','📦','Mercadería recibida'],['sup','🚚','Proveedores'],['ped','📋','Pedidos'],['pagos','💳','Pagos diarios'],['notas','📝','Notas'],['venc','⏰','Vencimientos'],['alert','🔔','Alertas'],['prod','🏷️','Productos'],['stock','📦','Control de stock'],['hist','🧠','Historial & Memoria'],['trash','🗑️','Papelera'],['users','👥','Usuarios'],['config','⚙️','Configuración'],['perfil','👤','Perfil']];
+// Pagos diarios e Historial & Memoria ya no están en el menú: siguen existiendo y se abren desde las tarjetas de Inicio (go('pagos') / go('hist')).
+const NAV=[['home','🏠','Inicio'],['jornada','📅','Jornada diaria'],['merc','📦','Mercadería recibida'],['sup','🚚','Proveedores'],['ped','📋','Pedidos'],['notas','📝','Notas'],['venc','⏰','Vencimientos'],['alert','🔔','Alertas'],['prod','🏷️','Productos'],['stock','📦','Control de stock'],['trash','🗑️','Papelera'],['users','👥','Usuarios'],['config','⚙️','Configuración'],['perfil','👤','Perfil']];
