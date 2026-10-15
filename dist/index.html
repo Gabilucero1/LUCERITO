@@ -221,7 +221,7 @@ const Remote={
   let ch=this.sb.channel('lucerito');
   for(const {t} of SYNC)if(!this.missing[t])ch=ch.on('postgres_changes',{event:'*',schema:'public',table:t},p=>this.onRow(t,p));
   ch=ch.on('postgres_changes',{event:'*',schema:'public',table:'profiles'},p=>this.onProfile(p)).on('postgres_changes',{event:'*',schema:'public',table:'app_settings'},p=>this.onCfg(p)).on('postgres_changes',{event:'*',schema:'public',table:'app_sessions'},p=>this.onSess(p));
-  this.ch=ch.subscribe()},
+  this.ch=ch.subscribe(st=>{if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'){clearTimeout(this._rs);this._rs=setTimeout(()=>{if(me&&this.sb)this.subscribe()},5000)}})},
  isDirty(t,id){const rec=db[TBL[t]].find(r=>r.id===id);return !!rec&&stable(rec)!==this.SNAP[t][id]},
  onRow(t,p){if(!me)return;const k=TBL[t],arr=db[k];
   if(p.eventType==='DELETE'){const id=p.old.id,i=arr.findIndex(r=>r.id===id);if(i>=0&&!this.isDirty(t,id))arr.splice(i,1);delete this.SNAP[t][id];delete this.VER[t][id]}
@@ -239,7 +239,22 @@ const Remote={
   this.refresh()},
  onCfg(p){if(!me)return;db.cfg=Object.assign({offerDays:10,approve:true},p.new.data||{});this.cfgSnap=stable(db.cfg);this.refresh()},
  onSess(p){if(p.new&&p.new.id===this.sid&&p.new.revoked_at){this.revoked=true;forceOut()}},
- refresh(){clearTimeout(this._r);this._r=setTimeout(()=>{const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.closest&&a.closest('#app'))return;if(me)render()},250)},
+ refresh(){clearTimeout(this._r);this._r=setTimeout(()=>{const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.closest&&a.closest('#app')&&(a.tagName!=='INPUT'||String(a.value||'')!==''||a.type==='date')){this._pend=true;return}this._pend=false;if(me)render()},250)},
+ // ---------- respaldo: ponerse al día aunque el tiempo real haya fallado (celular dormido, sin señal, pestaña en segundo plano) ----------
+ async resync(){if(!this.on||!me||!this.sb||!this.uid||this.syncing||this.pushing)return;this.syncing=true;let changed=false;
+  try{for(const {k,t,opt} of SYNC){if(this.missing[t])continue;let rows;try{rows=t==='audit_log'?await this.fetchLog():await this.fetchAll(t)}catch(e){if(opt&&isMissingTable(e))this.missing[t]=true;continue}
+   const snap=this.SNAP[t]||(this.SNAP[t]={}),ver=this.VER[t]||(this.VER[t]={}),cur=db[k],byId=new Map(cur.map(r=>[r.id,r])),srv=new Set(),out=[];
+   for(const r of rows){srv.add(r.id);const local=byId.get(r.id);
+    if(local&&stable(local)!==snap[r.id]){out.push(local);continue}
+    if(local&&ver[r.id]===r.version){out.push(local);continue}
+    const rec={...r.data,id:r.id};snap[r.id]=stable(rec);ver[r.id]=r.version;out.push(rec);changed=true}
+   for(const r of cur){if(srv.has(r.id))continue;const dirty=!(r.id in snap)||stable(r)!==snap[r.id];if(t==='audit_log'||dirty)out.push(r);else{delete snap[r.id];delete ver[r.id];changed=true}}
+   if(t==='audit_log')out.sort((a,b)=>b.id-a.id);db[k]=out}
+   const p=await this.sb.from('profiles').select('*');if(!p.error&&p.data){const us=p.data.map(mapProfile),mi=us.findIndex(u=>u.uid===me.uid);if(mi>=0){Object.assign(me,us[mi]);us[mi]=me;if(!me.on){forceOut();return}}const sv=a=>stable(a.map(u=>({...u,lastSeen:0,lastAccess:0})));if(sv(us)!==sv(db.users))changed=true;db.users=us}
+   const s=await this.sb.from('app_settings').select('data').eq('id',1);if(s.data&&s.data[0]&&stable(db.cfg)===this.cfgSnap){const c=Object.assign({offerDays:10,approve:true},s.data[0].data||{});if(stable(c)!==stable(db.cfg)){db.cfg=c;this.cfgSnap=stable(c);changed=true}}
+  }catch(e){}finally{this.syncing=false}
+  if(changed)this.refresh()},
+ async live(vuelta){if(!this.on||!me||!this.sb)return;if(vuelta)this.subscribe();await this.flush();await this.resync()},
  // ---------- sesiones (ligadas a la cuenta, no al dispositivo) ----------
  async startSession(){const {data,error}=await this.sb.from('app_sessions').insert({user_id:this.uid,device:deviceKind()+' · '+((String(navigator.userAgent).match(/(Edg|Chrome|Firefox|Safari)\//)||[0,'Navegador'])[1])}).select('id');
   if(!error&&data&&data[0]){this.sid=data[0].id;sid=this.sid}
@@ -327,11 +342,14 @@ function histPage(){return `<h2>🧠 Historial & Memoria</h2><p class="sub">Todo
 
 // Permisos. AVISO: solo controlan la pantalla. Un permiso real se verifica en el servidor (ver README).
 // Las usuarias tienen permisos operativos amplios. Solo la administradora gestiona cuentas, permisos y seguridad.
-const RQ={users:'Administrar usuarios o permisos',otro:'Otra acción',del:'Eliminar un registro',date:'Cambiar la fecha de un registro'};
-const RQ_OPT=['users','otro'];
+const RQ={users:'Administrar usuarios o permisos',otro:'Otra acción',del:'Eliminar un registro',date:'Cambiar la fecha de un registro',cig:'Anotar o editar el conteo de cigarrillos (por hoy)'};
+const RQ_OPT=['users','cig','otro'];
 const ADMIN_ONLY=['users','perms','sessions','purge','config'];
 const can=a=>!!me&&(!!me.admin||!ADMIN_ONLY.includes(a)||!!(me.grants&&me.grants[a]>0));
 const useGrant=a=>{if(!me||me.admin||!me.grants)return;if(me.grants[a]>0){me.grants[a]--;save()}};
+
+// Cigarrillos: anota y edita la administradora. Otra usuaria solo si la administradora le aprobó la solicitud, y vale solo el día de la aprobación.
+const cigCan=()=>!!me&&(!!me.admin||db.reqs.some(r=>r.uid===me.id&&r.k==='cig'&&r.st==='Aprobada'&&r.ad===iso()));
 
 // Ingreso con CORREO + contraseña, registro, recuperación de contraseña y sesiones.
 // AVISO: en modo demo todo vive en este dispositivo (ver services.js). No es autenticación real hasta conectar un servidor.
@@ -474,7 +492,13 @@ function purgeAsk(tid){ask('¿Eliminar para siempre? No se puede deshacer. Queda
 function purge(tid){if(!can('purge'))return;const t=db.trash.find(x=>x.tid===tid);if(!t)return;
  log('Eliminó definitivamente '+TL[t.coll].toLowerCase(),describe(t.coll,t.rec),snap(t.rec)+' · eliminado antes por '+t.by+' el '+fd(t.d)+' '+t.h,null);
  db.trash=db.trash.filter(x=>x!==t);save();render()}
-function trashPage(){return `<h2>🗑️ Papelera</h2><p class="sub">Lo que se elimina queda acá y en el historial. Se puede restaurar.</p>${trashActive().map(t=>`<div class="card"><div class="mut">${esc(TL[t.coll]||t.coll)}</div><div class="big">${esc(describe(t.coll,t.rec))}</div><div class="mut">Eliminó ${esc(t.by)} · ${fd(t.d)} ${t.h}</div><button class="btn" onclick="restoreT(${t.tid})">♻️ RESTAURAR</button>${can('purge')?`<button class="btn d" onclick="purgeAsk(${t.tid})">🗑️ ELIMINAR PERMANENTEMENTE</button>`:''}</div>`).join('')||'<div class="empty">La papelera está vacía.</div>'}`}
+// Eliminar todo de una vez (solo la administradora). Deja UNA constancia en el historial con lo que se eliminó.
+function purgeAllAsk(){if(!can('purge'))return;const n=trashActive().length;if(!n)return;ask('¿Eliminar TODO lo que hay en la papelera ('+n+(n===1?' elemento':' elementos')+') para siempre? No se puede deshacer. Queda constancia en el historial.',purgeAll,'Sí, eliminar todo')}
+function purgeAll(){if(!can('purge'))return;const L=trashActive();if(!L.length)return;
+ const lista=L.slice(0,40).map(t=>(TL[t.coll]||t.coll)+': '+describe(t.coll,t.rec)).join(' | ')+(L.length>40?' | y '+(L.length-40)+' más':'');
+ log('Vació la papelera',L.length+(L.length===1?' elemento eliminado definitivamente':' elementos eliminados definitivamente'),lista,null);
+ const ids=new Set(L.map(t=>t.tid));db.trash=db.trash.filter(t=>!ids.has(t.tid));save();render();toast('Papelera vaciada ('+L.length+')')}
+function trashPage(){return `<h2>🗑️ Papelera</h2><p class="sub">Lo que se elimina queda acá y en el historial. Se puede restaurar.</p>${can('purge')&&trashActive().length?`<button class="btn d" onclick="purgeAllAsk()">🗑️ ELIMINAR TODO (${trashActive().length})</button>`:''}${trashActive().map(t=>`<div class="card"><div class="mut">${esc(TL[t.coll]||t.coll)}</div><div class="big">${esc(describe(t.coll,t.rec))}</div><div class="mut">Eliminó ${esc(t.by)} · ${fd(t.d)} ${t.h}</div><button class="btn" onclick="restoreT(${t.tid})">♻️ RESTAURAR</button>${can('purge')?`<button class="btn d" onclick="purgeAsk(${t.tid})">🗑️ ELIMINAR PERMANENTEMENTE</button>`:''}</div>`).join('')||'<div class="empty">La papelera está vacía.</div>'}`}
 
 function go(v){view=v;menuOpen=false;render();scrollTo(0,0)}
 function render(){
@@ -783,7 +807,7 @@ function resetAll(){ask('Se borran TODOS los datos de este dispositivo. ¿Seguro
 function reqSheet(pre){const mine=db.reqs.filter(r=>me.admin||r.uid===me.id).slice(0,20);
  sheet(`<h2>🙋 Solicitar permisos</h2>${me.admin?'':`<label>¿Qué necesitás hacer?</label><select id="rq">${RQ_OPT.map(k=>[k,RQ[k]]).map(e=>`<option value="${e[0]}" ${e[0]===pre?'selected':''}>${e[1]}</option>`).join('')}</select><label>Detalle</label><textarea id="rn" rows="2" placeholder="Ej: necesito administrar una cuenta"></textarea><button class="btn" onclick="sendReq()">Enviar solicitud a la administradora</button>`}<h2>${me.admin?'Solicitudes':'Mis solicitudes'}</h2>${mine.map(r=>`<div class="card"><b>${esc(r.u)}</b> solicita permiso para: ${esc(RQ[r.k]||r.k)}<div class="mut">${esc(r.note||'')} · ${fd(r.d)} ${r.h}</div><div class="big">${r.st==='Pendiente'?'🟡 Pendiente':r.st==='Aprobada'?'✅ Aprobada':'❌ Rechazada'}</div>${me.admin&&r.st==='Pendiente'?`<button class="btn" onclick="resReq(${r.id},1)">✅ Aprobar</button><button class="btn d" onclick="resReq(${r.id},0)">❌ Rechazar</button>`:''}</div>`).join('')||'<div class="empty">No hay solicitudes.</div>'}<button class="btn s" onclick="closeSheet()">Volver</button>`)}
 function sendReq(){const k=$('#rq').value;db.reqs.unshift({id:nid(),uid:me.id,u:me.name,k,note:$('#rn').value.trim(),d:iso(),h:hm(),st:'Pendiente'});log('Solicitó permiso',RQ[k]||k);reqSheet()}
-function resReq(id,ok){if(!me.admin)return;const r=db.reqs.find(x=>x.id===id),u=db.users.find(x=>x.id===r.uid);r.st=ok?'Aprobada':'Rechazada';r.by=me.name;if(ok&&u&&r.k!=='otro'){u.grants=u.grants||{};u.grants[r.k]=(u.grants[r.k]||0)+1}log((ok?'Aprobó':'Rechazó')+' solicitud de permiso',r.u+': '+(RQ[r.k]||r.k));reqSheet()}
+function resReq(id,ok){if(!me.admin)return;const r=db.reqs.find(x=>x.id===id),u=db.users.find(x=>x.id===r.uid);r.st=ok?'Aprobada':'Rechazada';r.by=me.name;if(ok&&r.k==='cig')r.ad=iso();else if(ok&&u&&r.k!=='otro'){u.grants=u.grants||{};u.grants[r.k]=(u.grants[r.k]||0)+1}log((ok?'Aprobó':'Rechazó')+' solicitud de permiso',r.u+': '+(RQ[r.k]||r.k));reqSheet()}
 const NT=[['vencimientos','Vencimientos'],['stock_bajo','Stock bajo'],['sin_stock','Sin stock'],['aumentos','Aumentos'],['pedidos','Pedidos'],['mercaderia','Mercadería recibida'],['otros','Otros avisos importantes']];
 function notifSheet(){const B='<button class="btn s" onclick="closeSheet()">Volver</button>';
  if(!Remote.on)return sheet(`<h2>🔔 Notificaciones</h2><p class="lmsg">Modo local: las notificaciones push reales necesitan que la app esté conectada a Supabase y a Firebase (ver README). Mientras tanto solo avisan con la app abierta.</p>${chkbox(db.cfg.notif,'db.cfg.notif=this.checked;save()','Avisarme en este dispositivo (app abierta)')}<button class="btn" onclick="askNotif()">Permitir notificaciones del navegador</button>${B}`);
@@ -832,17 +856,17 @@ const cigRes=t=>t.res==null?'':t.res===0?'<b style="color:var(--ok)">✅ Justo: 
 function cigSum(s,full){const t=cigTot(s);
  return `<div class="card"><div class="big">${fd(s.d)} · ${s.h}</div><div class="mut" style="font-size:12px">Contó: ${esc(s.u)}${t.dias>1?' · este conteo cubre '+t.dias+' días':''}</div>${full?s.rows.map(r=>`<div class="mut" style="margin-top:6px"><b>${esc(r.p.name)}</b>: vendió <b>${r.c.vend}</b> (esperaba ${r.c.esp}, contaste ${r.c.qty})${r.c.dif>0?'<br>⚠️ Contaste '+r.c.dif+' más de lo esperado: revisá si falta cargar una entrada de mercadería.':''}</div>`).join(''):''}<div style="margin-top:8px">Paquetes vendidos: <b>${t.vend}</b></div><div>Plata que debería haber: <b>${money(t.esp)}</b></div>${s.ap!=null?`<div>Plata apartada: <b>${money(s.ap)}</b></div><div style="margin-top:4px">${cigRes(t)}</div>`:'<div class="mut">No cargaste la plata apartada.</div>'}</div>`}
 function cigPage(){const L=cigList(),S=cigSes();
- return `<h2>🚬 Cigarrillos</h2><p class="mut" style="font-size:12px">Para qué sirve esta sección: contá los cigarrillos una vez por día (a la mañana). La app compara con lo que debería haber, calcula cuántos se vendieron desde el último conteo y cuánta plata tendría que haber para volver a comprar. Nadie tiene que anotar cada venta.</p>
- ${L.length?`<div class="card" style="border-left:6px solid var(--p2,#e91e8c)"><div class="ba-t" style="margin-bottom:4px">📋 CONTEO DE HOY</div><div class="mut" style="font-size:12px">Escribí cuántos hay ahora de cada marca. Si una marca no la contás hoy, dejala vacía. A la mañana siguiente la app te dice cuántos se vendieron.</div>${L.map(p=>{const last=(p.conteos||[])[0];return `<div class="row" style="padding:10px 0;border-top:1px solid var(--p1)"><div class="grow"><div class="big">${esc(p.name)}</div><div class="mut" style="font-size:12px">Hay en la app: <b>${Number(p.stock)||0}</b>${last?' · último conteo: '+fd(last.d):' · todavía sin conteo'} · ${money(p.price)}</div></div><input class="bigin" style="width:92px;text-align:center" type="number" inputmode="numeric" min="0" placeholder="Hay" value="${esc(CQ[p.id]??'')}" oninput="CQ[${p.id}]=this.value" aria-label="Cuántos hay de ${esc(p.name)}"><button class="ib" style="background:var(--p1);color:var(--ink)" onclick="editProd(${p.id})" aria-label="Editar marca">✏️</button></div>`}).join('')}<label style="margin-top:12px">Plata apartada para reponer (opcional)</label><input class="bigin" inputmode="decimal" placeholder="Ej: 150.000" value="${esc(CAP)}" oninput="CAP=this.value"><button class="btn" onclick="cigSave()">GUARDAR CONTEO</button></div>`:'<div class="empty">Todavía no cargaste ninguna marca.</div>'}
- <button class="btn s" onclick="cigAddForm()">➕ AGREGAR MARCA</button>
- ${S.length?`<h2 style="font-size:18px;margin-top:18px">Último conteo</h2>${cigSum(S[0],true)}${S[0].d===iso()?`<button class="btn s" onclick="cigEditForm(${S[0].sid})">✏️ EDITAR EL CONTEO DE HOY</button>`:''}${me&&me.admin?`<button class="btn d" onclick="cigDelAsk(${S[0].sid})">🗑️ ELIMINAR EL ÚLTIMO CONTEO</button>`:'<div class="mut" style="font-size:12px;margin-top:6px">Solo la administradora puede eliminar el último conteo.</div>'}${S.length>1?`<h2 style="font-size:18px;margin-top:14px">Conteos anteriores</h2>${S.slice(1,8).map(s=>cigSum(s,false)).join('')}`:''}`:''}`}
-function cigAddForm(){sheet(`<h2>➕ Agregar marca de cigarrillos</h2><label>Marca (ej: Marlboro Box)</label><input id="cn" class="bigin" placeholder="Nombre de la marca"><label>Precio de venta del paquete</label><input id="cp" class="bigin" inputmode="decimal" placeholder="Ej: 3.500"><label>¿Cuántos hay ahora? (opcional)</label><input id="ci" class="bigin" type="number" inputmode="numeric" min="0" placeholder="0"><button class="btn" onclick="cigAdd()">GUARDAR MARCA</button><button class="btn s" onclick="closeSheet()">Cancelar</button>`)}
-function cigAdd(){const name=String($('#cn').value||'').trim(),price=numVal($('#cp').value),iv=String($('#ci').value||'').trim(),n=iv===''?0:Number(iv);
+ return `<h2>🚬 Cigarrillos</h2><p class="mut" style="font-size:12px">Para qué sirve esta sección: contá los cigarrillos una vez por día (a la mañana). La app compara con lo que debería haber, calcula cuántos se vendieron desde el último conteo y cuánta plata tendría que haber para volver a comprar. Nadie tiene que anotar cada venta. Cada conteo queda guardado y el de mañana parte de lo que dejaste hoy.</p>
+ ${L.length&&!cigCan()?`<div class="card"><div class="ba-t" style="margin-bottom:4px">🔒 CONTEO DE HOY</div><div class="mut" style="font-size:12px">El conteo lo anota la administradora. Si necesitás anotarlo o corregirlo, pedile permiso.</div>${L.map(p=>{const last=(p.conteos||[])[0];return `<div class="row" style="padding:8px 0;border-top:1px solid var(--p1)"><div class="grow"><div class="big">${esc(p.name)}</div><div class="mut" style="font-size:12px">Hay en la app: <b>${Number(p.stock)||0}</b>${last?' · último conteo: '+fd(last.d):''} · ${money(p.price)}</div></div></div>`}).join('')}<button class="btn s" onclick="reqSheet('cig')">🔒 SOLICITAR PERMISO para anotar el conteo</button></div>`:''}${L.length&&cigCan()?`<div class="card" style="border-left:6px solid var(--p2,#e91e8c)"><div class="ba-t" style="margin-bottom:4px">📋 CONTEO DE HOY</div><div class="mut" style="font-size:12px">Escribí cuántos hay ahora de cada marca. Si una marca no la contás hoy, dejala vacía. A la mañana siguiente la app te dice cuántos se vendieron.</div>${L.map(p=>{const last=(p.conteos||[])[0];return `<div class="row" style="padding:10px 0;border-top:1px solid var(--p1)"><div class="grow"><div class="big">${esc(p.name)}</div><div class="mut" style="font-size:12px">Hay en la app: <b>${Number(p.stock)||0}</b>${last?' · último conteo: '+fd(last.d):' · todavía sin conteo'} · ${money(p.price)}</div></div><input class="bigin" style="width:92px;text-align:center" type="number" inputmode="numeric" min="0" placeholder="Hay" value="${esc(CQ[p.id]??'')}" oninput="CQ[${p.id}]=this.value" aria-label="Cuántos hay de ${esc(p.name)}"><button class="ib" style="background:var(--p1);color:var(--ink)" onclick="editProd(${p.id})" aria-label="Editar marca">✏️</button></div>`}).join('')}<label style="margin-top:12px">Plata apartada para reponer (opcional)</label><input class="bigin" inputmode="decimal" placeholder="Ej: 150.000" value="${esc(CAP)}" oninput="CAP=this.value"><button class="btn" onclick="cigSave()">GUARDAR CONTEO</button></div>`:'<div class="empty">Todavía no cargaste ninguna marca.</div>'}
+ ${cigCan()?'<button class="btn s" onclick="cigAddForm()">➕ AGREGAR MARCA</button>':''}
+ ${S.length?`<h2 style="font-size:18px;margin-top:18px">Último conteo</h2>${cigSum(S[0],true)}${S[0].d===iso()&&cigCan()?`<button class="btn s" onclick="cigEditForm(${S[0].sid})">✏️ EDITAR EL CONTEO DE HOY</button>`:''}${me&&me.admin?`<button class="btn d" onclick="cigDelAsk(${S[0].sid})">🗑️ ELIMINAR EL ÚLTIMO CONTEO</button>`:'<div class="mut" style="font-size:12px;margin-top:6px">Solo la administradora puede eliminar el último conteo.</div>'}${S.length>1?`<h2 style="font-size:18px;margin-top:14px">Conteos anteriores</h2><p class="mut" style="font-size:12px">Cada conteo queda guardado. El de mañana parte de lo que dejaste hoy.</p>${S.slice(1,31).map(s=>cigSum(s,false)).join('')}`:''}`:''}`}
+function cigAddForm(){if(!cigCan())return toast('Solo la administradora puede agregar marcas. Pedile permiso.');sheet(`<h2>➕ Agregar marca de cigarrillos</h2><label>Marca (ej: Marlboro Box)</label><input id="cn" class="bigin" placeholder="Nombre de la marca"><label>Precio de venta del paquete</label><input id="cp" class="bigin" inputmode="decimal" placeholder="Ej: 3.500"><label>¿Cuántos hay ahora? (opcional)</label><input id="ci" class="bigin" type="number" inputmode="numeric" min="0" placeholder="0"><button class="btn" onclick="cigAdd()">GUARDAR MARCA</button><button class="btn s" onclick="closeSheet()">Cancelar</button>`)}
+function cigAdd(){if(!cigCan())return toast('Solo la administradora puede agregar marcas. Pedile permiso.');const name=String($('#cn').value||'').trim(),price=numVal($('#cp').value),iv=String($('#ci').value||'').trim(),n=iv===''?0:Number(iv);
  if(!name)return toast('Escribí la marca');if(!(price>0))return toast('Escribí el precio de venta');if(!Number.isInteger(n)||n<0)return toast('Revisá cuántos hay ahora');
  if(cigList().some(p=>secKey(p.name)===secKey(name)))return toast('Esa marca ya está cargada');
  const p={id:nid(),hist:[],smov:[],name,barcode:'',cat:'Cigarrillos',sup:'',price,unit:'',disc:0,stock:0,min:0,venc:'',emoji:'🚬',cig:true,conteos:[]};db.prod.push(p);
  log('Agregó producto',name,null,'marca de cigarrillos · '+money(price));if(n>0)stockMove(p,n,'Stock inicial (cigarrillos)');save();closeSheet();toast('Marca agregada')}
-function cigSave(){const rows=[];
+function cigSave(){if(!cigCan())return toast('Solo la administradora puede anotar el conteo. Pedile permiso.');const rows=[];
  for(const p of cigList()){const v=String(CQ[p.id]??'').trim();if(v==='')continue;if(!/^\d+$/.test(v))return toast('Revisá el número de '+p.name);rows.push({p,q:Number(v)})}
  if(!rows.length)return toast('Escribí cuántos hay de al menos una marca');
  const aps=String(CAP||'').trim(),ap=aps===''?null:parseAR(aps);if(aps!==''&&isNaN(ap))return toast('Revisá la plata apartada');
@@ -855,9 +879,9 @@ function cigSave(){const rows=[];
 
 // Editar el conteo de hoy: puede cualquier usuaria. Eliminar el último conteo: solo la administradora.
 const cigLast=sid=>{const s=cigSes()[0];return s&&s.sid===sid?s:null};
-function cigEditForm(sid){const s=cigLast(sid);if(!s||s.d!==iso())return toast('Solo se puede editar el conteo de hoy');
+function cigEditForm(sid){if(!cigCan())return toast('Solo la administradora puede editar el conteo. Pedile permiso.');const s=cigLast(sid);if(!s||s.d!==iso())return toast('Solo se puede editar el conteo de hoy');
  sheet(`<h2>✏️ Editar el conteo de hoy</h2><div class="mut" style="font-size:12px">Corregí cuántos hay de cada marca. La app vuelve a calcular lo vendido y la plata.</div>${s.rows.map(r=>`<div class="row" style="padding:10px 0;border-top:1px solid var(--p1)"><div class="grow"><div class="big">${esc(r.p.name)}</div><div class="mut" style="font-size:12px">La app esperaba: <b>${r.c.esp}</b></div></div><input id="ce_${r.p.id}" class="bigin" style="width:92px;text-align:center" type="number" inputmode="numeric" min="0" value="${r.c.qty}"></div>`).join('')}<label>Plata apartada para reponer (opcional)</label><input id="cea" class="bigin" inputmode="decimal" value="${s.ap==null?'':esc(numIn(s.ap))}"><button class="btn" onclick="cigEditSave(${sid})">GUARDAR CAMBIOS</button><button class="btn s" onclick="closeSheet()">Cancelar</button>`)}
-function cigEditSave(sid){const s=cigLast(sid);if(!s||s.d!==iso())return toast('Solo se puede editar el conteo de hoy');
+function cigEditSave(sid){if(!cigCan())return toast('Solo la administradora puede editar el conteo. Pedile permiso.');const s=cigLast(sid);if(!s||s.d!==iso())return toast('Solo se puede editar el conteo de hoy');
  const nv=[];for(const r of s.rows){const v=String(($('#ce_'+r.p.id)||{}).value??'').trim();if(!/^\d+$/.test(v))return toast('Revisá el número de '+r.p.name);nv.push(Number(v))}
  const aps=String(($('#cea')||{}).value||'').trim(),ap=aps===''?null:parseAR(aps);if(aps!==''&&isNaN(ap))return toast('Revisá la plata apartada');
  s.rows.forEach((r,i)=>{const c=r.c,p=r.p,q=nv[i];if(q!==c.qty){const adj=(Number(p.stock)||0)-c.qty;stockMove(p,Math.max(0,q+adj),'Corrección del conteo de cigarrillos');log('Corrigió el conteo de cigarrillos',p.name,c.qty,q)}
@@ -954,5 +978,14 @@ if(Remote.on){render();Remote.init().then(()=>render())}else{restoreLocal();rend
 if(typeof setInterval!=='undefined')setInterval(()=>{if(me&&!sessAlive())forceOut()},5000);
 // Si la app vuelve al primer plano y hay una sesión de Supabase guardada que todavía no entró (por ejemplo, falló la red al abrir), se reintenta sin pedir contraseña.
 if(typeof document!=='undefined'&&document.addEventListener)document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Remote.on&&Remote.ready&&!me&&!Remote.entering)Remote.afterAuth().then(ok=>{if(ok)render()}).catch(()=>{})});
+
+// Que las usuarias vean los cambios de las demás sin cerrar la app: respaldo del tiempo real.
+// Cada 20 s (si la app está a la vista), y al volver al primer plano, recuperar la señal o enfocar la ventana.
+if(typeof setInterval!=='undefined')setInterval(()=>{if(Remote.on&&me&&!(typeof document!=='undefined'&&document.hidden))Remote.live(false).catch(()=>{})},20000);
+if(typeof document!=='undefined'&&document.addEventListener){
+ document.addEventListener('visibilitychange',()=>{if(!document.hidden&&Remote.on&&me)Remote.live(true).catch(()=>{})});
+ document.addEventListener('focusout',()=>{if(Remote._pend)setTimeout(()=>Remote.refresh(),50)});
+}
+if(typeof window!=='undefined'&&window.addEventListener){window.addEventListener('online',()=>{if(Remote.on&&me)Remote.live(true).catch(()=>{})});window.addEventListener('pageshow',e=>{if(e&&e.persisted&&Remote.on&&me)Remote.live(true).catch(()=>{})})}
 
 </script></body></html>

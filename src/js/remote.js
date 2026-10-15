@@ -93,7 +93,7 @@ const Remote={
   let ch=this.sb.channel('lucerito');
   for(const {t} of SYNC)if(!this.missing[t])ch=ch.on('postgres_changes',{event:'*',schema:'public',table:t},p=>this.onRow(t,p));
   ch=ch.on('postgres_changes',{event:'*',schema:'public',table:'profiles'},p=>this.onProfile(p)).on('postgres_changes',{event:'*',schema:'public',table:'app_settings'},p=>this.onCfg(p)).on('postgres_changes',{event:'*',schema:'public',table:'app_sessions'},p=>this.onSess(p));
-  this.ch=ch.subscribe()},
+  this.ch=ch.subscribe(st=>{if(st==='CHANNEL_ERROR'||st==='TIMED_OUT'){clearTimeout(this._rs);this._rs=setTimeout(()=>{if(me&&this.sb)this.subscribe()},5000)}})},
  isDirty(t,id){const rec=db[TBL[t]].find(r=>r.id===id);return !!rec&&stable(rec)!==this.SNAP[t][id]},
  onRow(t,p){if(!me)return;const k=TBL[t],arr=db[k];
   if(p.eventType==='DELETE'){const id=p.old.id,i=arr.findIndex(r=>r.id===id);if(i>=0&&!this.isDirty(t,id))arr.splice(i,1);delete this.SNAP[t][id];delete this.VER[t][id]}
@@ -111,7 +111,22 @@ const Remote={
   this.refresh()},
  onCfg(p){if(!me)return;db.cfg=Object.assign({offerDays:10,approve:true},p.new.data||{});this.cfgSnap=stable(db.cfg);this.refresh()},
  onSess(p){if(p.new&&p.new.id===this.sid&&p.new.revoked_at){this.revoked=true;forceOut()}},
- refresh(){clearTimeout(this._r);this._r=setTimeout(()=>{const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.closest&&a.closest('#app'))return;if(me)render()},250)},
+ refresh(){clearTimeout(this._r);this._r=setTimeout(()=>{const a=document.activeElement;if(a&&/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)&&a.closest&&a.closest('#app')&&(a.tagName!=='INPUT'||String(a.value||'')!==''||a.type==='date')){this._pend=true;return}this._pend=false;if(me)render()},250)},
+ // ---------- respaldo: ponerse al día aunque el tiempo real haya fallado (celular dormido, sin señal, pestaña en segundo plano) ----------
+ async resync(){if(!this.on||!me||!this.sb||!this.uid||this.syncing||this.pushing)return;this.syncing=true;let changed=false;
+  try{for(const {k,t,opt} of SYNC){if(this.missing[t])continue;let rows;try{rows=t==='audit_log'?await this.fetchLog():await this.fetchAll(t)}catch(e){if(opt&&isMissingTable(e))this.missing[t]=true;continue}
+   const snap=this.SNAP[t]||(this.SNAP[t]={}),ver=this.VER[t]||(this.VER[t]={}),cur=db[k],byId=new Map(cur.map(r=>[r.id,r])),srv=new Set(),out=[];
+   for(const r of rows){srv.add(r.id);const local=byId.get(r.id);
+    if(local&&stable(local)!==snap[r.id]){out.push(local);continue}
+    if(local&&ver[r.id]===r.version){out.push(local);continue}
+    const rec={...r.data,id:r.id};snap[r.id]=stable(rec);ver[r.id]=r.version;out.push(rec);changed=true}
+   for(const r of cur){if(srv.has(r.id))continue;const dirty=!(r.id in snap)||stable(r)!==snap[r.id];if(t==='audit_log'||dirty)out.push(r);else{delete snap[r.id];delete ver[r.id];changed=true}}
+   if(t==='audit_log')out.sort((a,b)=>b.id-a.id);db[k]=out}
+   const p=await this.sb.from('profiles').select('*');if(!p.error&&p.data){const us=p.data.map(mapProfile),mi=us.findIndex(u=>u.uid===me.uid);if(mi>=0){Object.assign(me,us[mi]);us[mi]=me;if(!me.on){forceOut();return}}const sv=a=>stable(a.map(u=>({...u,lastSeen:0,lastAccess:0})));if(sv(us)!==sv(db.users))changed=true;db.users=us}
+   const s=await this.sb.from('app_settings').select('data').eq('id',1);if(s.data&&s.data[0]&&stable(db.cfg)===this.cfgSnap){const c=Object.assign({offerDays:10,approve:true},s.data[0].data||{});if(stable(c)!==stable(db.cfg)){db.cfg=c;this.cfgSnap=stable(c);changed=true}}
+  }catch(e){}finally{this.syncing=false}
+  if(changed)this.refresh()},
+ async live(vuelta){if(!this.on||!me||!this.sb)return;if(vuelta)this.subscribe();await this.flush();await this.resync()},
  // ---------- sesiones (ligadas a la cuenta, no al dispositivo) ----------
  async startSession(){const {data,error}=await this.sb.from('app_sessions').insert({user_id:this.uid,device:deviceKind()+' · '+((String(navigator.userAgent).match(/(Edg|Chrome|Firefox|Safari)\//)||[0,'Navegador'])[1])}).select('id');
   if(!error&&data&&data[0]){this.sid=data[0].id;sid=this.sid}

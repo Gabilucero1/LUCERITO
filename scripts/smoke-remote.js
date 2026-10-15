@@ -88,6 +88,15 @@ const ok=(c,m)=>{if(!c)throw new Error(m)};
  A.run("Object.assign(vals,{'#cn':'Marlboro','#cp':'3000','#ci':'20'});cigAdd()");await settle(A);await sleep(60);
  const mid=A.run('db.prod.find(p=>p.name==="Marlboro").id');A.run("CQ={};CQ[%d]='17';CAP='';cigSave()".replace('%d',mid));await settle(A);await sleep(60);
  ok(B.run('db.prod.find(p=>p.name==="Marlboro").stock')===17&&B.run('db.prod.find(p=>p.name==="Marlboro").conteos[0].vend')===3&&server.table('products').find(r=>r.data.name==='Marlboro').data.conteos.length===1,'el conteo de cigarrillos se guarda y lo ve la otra usuaria');
+ // --- respaldo: si el tiempo real falla (celular dormido), igual se ponen al día ---
+ const rid=Date.now()*1000+7;server.table('products').push({id:rid,data:{name:'SinAviso',price:5,stock:1,min:0,cat:'',hist:[],smov:[],emoji:'🏷️',barcode:'',sup:'',unit:'',disc:0,venc:''},version:1});
+ ok(B.run('db.prod.some(p=>p.name==="SinAviso")')===false,'(sin aviso de tiempo real B todavía no lo ve)');
+ await B.run('Remote.live(true)');await sleep(30);ok(B.run('db.prod.some(p=>p.name==="SinAviso")')===true,'el respaldo automático trae lo que se perdió el tiempo real');
+ B.run('db.prod.find(p=>p.name==="SinAviso").stock=99');server.table('products').find(r=>r.id===rid).data.stock=5;server.table('products').find(r=>r.id===rid).version=2;
+ await B.run('Remote.resync()');ok(B.run('db.prod.find(p=>p.name==="SinAviso").stock')===99,'un cambio mío sin guardar no se pisa');
+ await B.run('Remote.flush()');await sleep(30);
+ server.t.products=server.t.products.filter(r=>r.id!==rid);await B.run('Remote.resync()');await sleep(10);ok(B.run('db.prod.some(p=>p.name==="SinAviso")')===false,'lo eliminado por otra persona desaparece solo');
+ ok(B.run('db.users.length')===2&&!B.run('me.admin'),'la sesión y los usuarios siguen bien tras ponerse al día');
  // --- foto de perfil: se guarda y NO cierra la sesión ---
  A.run('newAv="data:image/jpeg;base64,AAAA"');Object.assign(A.vals,{'#pn':'Gabi','#pl':'R'});A.run('saveMe()');await settle(A);await sleep(40);
  ok(server.table('profiles').find(p=>p.email==='gabi@email.com').photo==='data:image/jpeg;base64,AAAA','la foto queda guardada en el perfil');
