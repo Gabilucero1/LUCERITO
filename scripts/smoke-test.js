@@ -194,6 +194,13 @@ delete vals['#sqc'];
  ok(calcCard().includes('TOTAL DEL DÍA'),'la calculadora muestra el total')}
 // --- menú sin Jornada diaria (la pantalla sigue existiendo) ---
 ok(!NAV.some(n=>n[0]==='jornada')&&!menu().includes('Jornada diaria')&&jornada().includes('Jornada diaria'),'Jornada diaria fuera del menú, pantalla y datos intactos');
+// --- papelera: eliminar todo (solo administradora) ---
+{const adm=me.admin;me.admin=true;const t0=trashActive().length;
+ db.notas.push({id:nid(),txt:'A',date:iso(),u:'x',h:'00:00'},{id:nid(),txt:'B',date:iso(),u:'x',h:'00:00'});const ids=db.notas.slice(-2).map(n=>n.id);softDelete('notas',ids[0]);softDelete('notas',ids[1]);
+ ok(trashActive().length===t0+2&&trashPage().includes('ELIMINAR TODO ('+(t0+2)+')'),'la papelera ofrece Eliminar todo con la cantidad');
+ me.admin=false;ok(!trashPage().includes('ELIMINAR TODO'),'una usuaria común no ve Eliminar todo');purgeAll();ok(trashActive().length===t0+2,'y no puede vaciarla');
+ me.admin=true;purgeAll();ok(trashActive().length===0&&db.log.some(l=>l.act==='Vació la papelera'),'la administradora vacía la papelera y queda constancia en el historial');
+ ok(trashPage().includes('vacía')&&!trashPage().includes('ELIMINAR TODO'),'papelera vacía: sin botón');me.admin=adm}
 // --- el precio nuevo no arranca con un 0 delante ---
 {const f=field(['price','Precio normal','num'],0);ok(f.includes('value=""')&&f.includes('placeholder="0"'),'un precio vacío no muestra 0');
  const g=field(['price','Precio normal','num'],14500.5);ok(g.includes('value="14500,5"'),'un precio cargado se muestra tal cual');
@@ -226,17 +233,33 @@ ok(!NAV.some(n=>n[0]==='jornada')&&!menu().includes('Jornada diaria')&&jornada()
  CQ={};cigSave();ok(true,'conteo vacío no rompe');
  ok(db.log.some(l=>l.act==='Conteo de cigarrillos')&&ma.smov.some(m=>m.motivo==='Conteo de cigarrillos'),'queda en el historial');
  ok(cigPage().includes('Último conteo')&&cigPage().includes('Conteos anteriores'),'muestra el último conteo y los anteriores');
- // editar hoy: cualquiera · eliminar el último: solo la administradora
- {const adm=me.admin;me.admin=false;const sid=cigSes()[0].sid;
-  ok(cigPage().includes('EDITAR EL CONTEO DE HOY')&&!cigPage().includes('ELIMINAR EL ÚLTIMO CONTEO')&&cigPage().includes('Solo la administradora puede eliminar'),'una usuaria común ve Editar pero no Eliminar');
-  vals['#ce_'+lu.id]='9';vals['#cea']='';cigEditSave(sid);
-  ok(lu.conteos[0].qty===9&&lu.conteos[0].vend===0&&lu.conteos[0].dif===1&&lu.stock===9,'cualquiera puede corregir el conteo de hoy y se recalcula');
-  cigDel(sid);ok(lu.conteos[0].sid===sid&&lu.stock===9,'una usuaria común NO puede eliminar el último conteo');
-  me.admin=true;ok(cigPage().includes('ELIMINAR EL ÚLTIMO CONTEO'),'la administradora ve Eliminar');
-  cigDel(sid);ok(lu.conteos[0].qty===8&&lu.stock===8&&cigSes()[0].sid!==sid&&db.log.some(l=>l.act==='Eliminó el último conteo de cigarrillos'),'la administradora elimina el último conteo: vuelve el stock y queda en el historial');
+ // permisos: anota y edita la administradora; otra usuaria solo con permiso aprobado (vale el día de la aprobación)
+ {const adm=me.admin,mid=me.id;const sid=cigSes()[0].sid;
+  me.admin=true;ok(cigCan()&&cigPage().includes('EDITAR EL CONTEO DE HOY')&&cigPage().includes('AGREGAR MARCA')&&cigPage().includes('ELIMINAR EL ÚLTIMO CONTEO'),'la administradora anota, edita y elimina');
+  me.admin=false;db.reqs=db.reqs.filter(r=>!(r.k==='cig'&&r.uid===mid));
+  ok(!cigCan()&&!cigPage().includes('EDITAR EL CONTEO DE HOY')&&!cigPage().includes('AGREGAR MARCA')&&!cigPage().includes('GUARDAR CONTEO')&&cigPage().includes('SOLICITAR PERMISO para anotar el conteo')&&!cigPage().includes('ELIMINAR EL ÚLTIMO CONTEO'),'una usuaria común no anota ni edita: solo ve y puede pedir permiso');
+  const q0=lu.conteos[0].qty,n0=lu.conteos.length,nb=cigList().length;
+  vals['#ce_'+lu.id]='3';cigEditSave(sid);CQ={};CQ[lu.id]='1';cigSave();Object.assign(vals,{'#cn':'Camel','#cp':'100','#ci':'1'});cigAdd();cigDel(sid);
+  ok(lu.conteos[0].qty===q0&&lu.conteos.length===n0&&cigList().length===nb,'sin permiso, ni anotar, ni editar, ni agregar marca, ni eliminar tienen efecto');
+  db.reqs.unshift({id:nid(),uid:mid,u:'Test',k:'cig',note:'',d:iso(),h:'00:00',st:'Pendiente'});
+  ok(RQ_OPT.includes('cig')&&!cigCan(),'una solicitud pendiente todavía no da permiso');
+  me.admin=true;const rq=db.reqs.find(r=>r.k==='cig'&&r.uid===mid&&r.st==='Pendiente');resReq(rq.id,1);me.admin=false;
+  ok(rq.st==='Aprobada'&&rq.ad===iso()&&cigCan(),'la administradora aprueba y esa usuaria puede anotar hoy');
+  vals['#ce_'+lu.id]='9';vals['#cea']='';cigEditSave(sid);ok(lu.conteos[0].qty===9&&lu.conteos[0].dif===1&&lu.stock===9,'con permiso aprobado puede corregir el conteo de hoy');
+  cigDel(sid);ok(lu.conteos[0].sid===sid,'pero igual no puede eliminar el último conteo');
+  rq.ad='2020-01-01';ok(!cigCan(),'el permiso aprobado vale solo el día de la aprobación');rq.ad=iso();
+  me.admin=true;cigDel(sid);ok(lu.conteos[0].qty===8&&lu.stock===8&&cigSes()[0].sid!==sid&&db.log.some(l=>l.act==='Eliminó el último conteo de cigarrillos'),'la administradora elimina el último conteo: vuelve el stock y queda en el historial');
+  ok(cigPage().includes('Cada conteo queda guardado'),'aclara que los conteos anteriores se conservan');
+  me.admin=adm}
+ // día a día: el conteo de ayer queda guardado y el de hoy parte de lo que quedó
+ {const adm=me.admin;me.admin=true;Object.assign(vals,{'#cn':'Pall Mall','#cp':'1000','#ci':'10'});cigAdd();const pm=db.prod.find(x=>x.name==='Pall Mall');
+  CQ={};CQ[pm.id]='7';CAP='';cigSave();ok(pm.stock===7&&pm.conteos[0].vend===3,'día 1: quedan 7 (se vendieron 3)');
+  pm.conteos[0].d=iso(new Date(Date.now()-864e5));
+  ok(cigPage().includes('Hay en la app: <b>7</b>'),'día 2: la app muestra lo que quedó ayer');
+  CQ={};CQ[pm.id]='5';cigSave();ok(pm.stock===5&&pm.conteos.length===2&&pm.conteos[1].qty===7&&pm.conteos[1].vend===3&&pm.conteos[0].vend===2&&pm.conteos[0].dias===1,'día 2: se vendieron 2 y el conteo de ayer sigue guardado');
   me.admin=adm}}
 logout();splash=true;login();splash=false;authView='reg';login();authView='forgot';fpStep=1;login();authView='login';login();
 // --- persistencia: recargar = leer lo guardado ---
-const re=Store.load();ok(re.prod.length===11&&re.users.length===2&&re.log.length>20,'los datos sobreviven a recargar');
+const re=Store.load();ok(re.prod.length===12&&re.users.length===2&&re.log.length>20,'los datos sobreviven a recargar');
 `;
 new Function('return (async()=>{'+js+'\n'+test+'})()')().then(()=>{console.log('Prueba OK');process.exit(0)}).catch(e=>{console.error('FALLÓ:',e.message,process.env.DBG?e.stack:'');process.exit(1)});
